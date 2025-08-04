@@ -10,6 +10,7 @@ import requests  # pip install requests
 import time
 import random
 import datetime
+import json
 from get_opening_calendar_from_szse.get_opening_calendar_from_szse import Get_stock_opening_calendar
 
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
@@ -469,7 +470,7 @@ class Spider_func():
         # 获取该class类所在.py文件的绝对目录
         self.file_full_dir = os.path.dirname(os.path.abspath(__file__))
         # 设置网易日k历史数据存储目录
-        self.stock_hisdata_dir = self.file_full_dir + '/stocks_historydata_em'
+        self.stock_hisdata_dir = self.file_full_dir + '/datas_em'
         if not os.path.exists(self.stock_hisdata_dir):
             os.mkdir(self.stock_hisdata_dir)
         pass
@@ -704,29 +705,33 @@ class Spider_func():
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
         }
-        resp = requests.get(url=url, headers=headers)
-        content = resp.content.decode('utf-8')
-        if 'data' in content:
-            # code = resp.json()['code']
-            # name = resp.json()['name']
-            data = resp.json()['data']['klines']
-            lst_data = []
+        try:
+            resp = requests.get(url=url, headers=headers, timeout=30)
+            content = resp.content.decode('utf-8')
+            if 'data' in content:
+                # code = resp.json()['code']
+                # name = resp.json()['name']
+                data = resp.json()['data']['klines']
+                lst_data = []
 
-            for i in data:
-                # 字符串分割为列表
-                lst_i = i.split(',')
-                lst_data.append(lst_i)
-            # print(data)
-            df = pd.DataFrame(lst_data)
-            # print(df)
-            df.columns = ['交易日期', '开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']
-            # 指定数字列数据类型为float
-            df[['开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']] = df[
-                ['开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']].astype(
-                float)
-            return df
-        else:
-            print('获取历史行情出错！')
+                for i in data:
+                    # 字符串分割为列表
+                    lst_i = i.split(',')
+                    lst_data.append(lst_i)
+                # print(data)
+                df = pd.DataFrame(lst_data)
+                # print(df)
+                df.columns = ['交易日期', '开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']
+                # 指定数字列数据类型为float
+                df[['开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']] = df[
+                    ['开盘价', '收盘价', '最高价', '最低价', '成交量', '成交额', '振幅', '涨跌幅', '涨跌额', '换手率']].astype(
+                    float)
+                return df
+            else:
+                print(f'获取历史行情出错！股票代码: {stock_code}')
+                return pd.DataFrame()
+        except Exception as e:
+            print(f'获取历史行情异常！股票代码: {stock_code}, 错误: {str(e)}')
             return pd.DataFrame()
 
     def download_all_stocks_history_kline_from_em(self):
@@ -737,7 +742,7 @@ class Spider_func():
         for i in df.index:
             try:
                 code = df.loc[i, '股票代码']
-                print(code)
+                print(f"正在处理: {code}")
                 # 从本机csv文件中获取股票上市日期,str格式 19900918
                 start_date = self.get_stock_start_date_from_csv(code, path=path)
                 # 获取当前日期作为结尾日期，str格式 20210918
@@ -746,19 +751,32 @@ class Spider_func():
                 # 设置下载股票历史数据的csv文件存储目录
                 path_dir = self.stock_hisdata_dir
 
-                # 开始循环下载和存储
+                # 开始循环下载和存储（包含板块信息）
                 df_code = self.get_stock_history_data_from_eastmoney(stock_code=code)
                 if not df_code.empty:
+                    # 获取股票板块信息
+                    stock_info = self.get_stock_industry_info_from_eastmoney(stock_code=code)
+                    
+                    if stock_info:
+                        # 添加板块信息到DataFrame
+                        df_code['所属行业'] = stock_info.get('所属行业', '')
+                        df_code['概念板块'] = stock_info.get('概念板块', '')
+                        df_code['地区'] = stock_info.get('地区', '')
+                        df_code['总股本'] = stock_info.get('总股本', 0)
+                        df_code['流通股'] = stock_info.get('流通股', 0)
+                        df_code['每股收益'] = stock_info.get('每股收益', 0)
+                        df_code['每股净资产'] = stock_info.get('每股净资产', 0)
+                    
                     save_path = path_dir + '/' + code + '.csv'
                     df_code.to_csv(save_path, mode='w', index=False, encoding='utf-8')
-                    # print('恭喜：%s处理后存储完成' % save_path)
+                    print(f'✅ {code} 数据保存完成 (包含板块信息)')
                     time.sleep(1)
                 else:
-                    print('未爬取到任何有效数据，记录并跳出循环!')
+                    print(f'❌ {code} 未爬取到任何有效数据，记录并跳出循环!')
                     continue
 
             except Exception as e:
-                print(f'{code}出错！{e}')
+                print(f'❌ {code} 出错！{e}')
                 continue
 
     def get_recent_all_stock_kline_data_from_em_old(self):
@@ -896,25 +914,29 @@ class Spider_func():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
         }
 
+        timestamp = int(time.time() * 1000)
+        
         if period == '当日':
-            # 当日分时资金流向
-            timestamp = int(time.time() * 1000)
-            url = f'http://push2.eastmoney.com/api/qt/stock/fflow/get?lmt=0&klt=1&secid={secid}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18309175766355915142&_={timestamp}'
+            # 当日分时资金流向 - 使用简化的API
+            url = f'http://push2.eastmoney.com/api/qt/stock/fflow/get?lmt=0&klt=1&secid={secid}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63&ut=b2884a393a59ad64002292a3e90d46a5&_={timestamp}'
         else:
-            # 历史每日资金流向
-            timestamp = int(time.time() * 1000)
-            url = f'http://push2his.eastmoney.com/api/qt/stock/fflow/get?lmt=500&klt=101&secid={secid}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63&ut=b2884a393a59ad64002292a3e90d46a5&cb=jQuery18309175766355915142&_={timestamp}'
+            # 历史每日资金流向 - 使用简化的API
+            url = f'http://push2his.eastmoney.com/api/qt/stock/fflow/get?lmt=500&klt=101&secid={secid}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63&ut=b2884a393a59ad64002292a3e90d46a5&_={timestamp}'
 
         try:
             resp = requests.get(url=url, headers=headers)
             content = resp.content.decode('utf-8')
             
             # 移除jsonp回调函数包装
-            start = content.find('(') + 1
-            end = content.rfind(')')
-            json_str = content[start:end]
+            if 'jQuery' in content and '(' in content:
+                start = content.find('(') + 1
+                end = content.rfind(')')
+                json_str = content[start:end]
+            else:
+                json_str = content
             
-            data = pd.read_json(json_str)
+            # 修复JSON解析警告，使用json.loads代替pd.read_json
+            data = json.loads(json_str)
             
             if 'data' in data and data['data'] is not None:
                 if period == '当日':
@@ -1290,6 +1312,664 @@ class Spider_func():
             
         except Exception as e:
             print(f'获取{stock_code}实时数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stock_opening_auction_data_from_eastmoney(self, stock_code: str) -> pd.DataFrame:
+        """
+        获取个股开盘集合竞价数据（9:15-9:25）
+        :param stock_code: 股票代码，如 'sh600519' 或 '600519'
+        :return: 包含开盘集合竞价数据的DataFrame
+        """
+        if len(stock_code) == 6:
+            symbol = stock_code
+        elif len(stock_code) == 8:
+            symbol = stock_code[2:]
+        else:
+            return pd.DataFrame()
+
+        if symbol[0] == '6':
+            market = '1'
+        elif symbol[0] == '0' or symbol[0] == '3':
+            market = '0'
+        else:
+            market = '0'
+        secid = market + '.' + symbol
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+
+        # 获取当前时间，判断是否在集合竞价时间段
+        import datetime
+        now = datetime.datetime.now()
+        current_time = now.strftime("%H:%M")
+        
+        print(f"当前时间: {current_time}")
+        
+        # 开盘集合竞价时间段：9:15-9:25
+        if "09:15" <= current_time <= "09:25":
+            print("✅ 当前处于开盘集合竞价时间段")
+        else:
+            print("⚠️ 当前不在开盘集合竞价时间段，获取历史集合竞价数据")
+
+        timestamp = int(time.time() * 1000)
+        
+        # 开盘集合竞价专用API
+        url = f'http://push2.eastmoney.com/api/qt/stock/details/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55&secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                details = resp_json['data']['details']
+                if details:
+                    df_list = []
+                    auction_data = []  # 专门存储集合竞价时间段的数据
+                    
+                    for detail in details:
+                        parts = detail.split(',')
+                        if len(parts) >= 5:
+                            time_str = parts[0]
+                            # 筛选开盘集合竞价时间段的数据 (09:15-09:25)
+                            if time_str.startswith('09:1') or time_str.startswith('09:2'):
+                                if '09:15' <= time_str <= '09:25':
+                                    auction_data.append(parts)
+                            df_list.append(parts)
+                    
+                    # 优先返回集合竞价时间段的数据
+                    data_to_use = auction_data if auction_data else df_list
+                    
+                    if data_to_use:
+                        df = pd.DataFrame(data_to_use)
+                        # 动态设置列名，根据实际数据列数
+                        if len(df.columns) == 5:
+                            df.columns = ['时间', '价格', '成交量', '成交额', '性质']
+                            numeric_cols = ['价格', '成交量', '成交额']
+                        elif len(df.columns) == 6:
+                            df.columns = ['时间', '价格', '涨跌', '成交量', '成交额', '性质']
+                            numeric_cols = ['价格', '涨跌', '成交量', '成交额']
+                        else:
+                            # 如果列数不匹配，使用通用列名
+                            df.columns = [f'col_{i}' for i in range(len(df.columns))]
+                            print(f"警告：开盘集合竞价数据列数为 {len(df.columns)}，使用通用列名")
+                            return df
+                        
+                        # 转换数据类型
+                        try:
+                            df[numeric_cols] = df[numeric_cols].astype(float)
+                        except:
+                            print("警告：数据类型转换失败，返回原始数据")
+                        
+                        # 添加说明列
+                        if auction_data:
+                            df['数据类型'] = '开盘集合竞价'
+                        else:
+                            df['数据类型'] = '普通交易'
+                            
+                        return df
+            
+            print(f'获取{stock_code}开盘集合竞价数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取{stock_code}开盘集合竞价数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stock_auction_data_from_eastmoney(self, stock_code: str, auction_type: str = '开盘集合竞价') -> pd.DataFrame:
+        """
+        获取个股竞价数据
+        :param stock_code: 股票代码，如 'sh600519' 或 '600519'
+        :param auction_type: 竞价类型，'开盘集合竞价', '收盘集合竞价', '分时成交'
+        :return: 包含竞价数据的DataFrame
+        """
+        if len(stock_code) == 6:
+            symbol = stock_code
+        elif len(stock_code) == 8:
+            symbol = stock_code[2:]
+        else:
+            return pd.DataFrame()
+
+        if symbol[0] == '6':
+            market = '1'
+        elif symbol[0] == '0' or symbol[0] == '3':
+            market = '0'
+        else:
+            market = '0'
+        secid = market + '.' + symbol
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+
+        timestamp = int(time.time() * 1000)
+
+        try:
+            if auction_type == '开盘集合竞价' or auction_type == '集合竞价':
+                # 调用专门的开盘集合竞价方法
+                return self.get_stock_opening_auction_data_from_eastmoney(stock_code)
+            
+            elif auction_type == '收盘集合竞价':
+                # 获取收盘集合竞价数据 (14:57-15:00)
+                url = f'http://push2.eastmoney.com/api/qt/stock/details/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55&secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&_={timestamp}'
+                
+                resp = requests.get(url=url, headers=headers)
+                resp_json = resp.json()
+                
+                if 'data' in resp_json and resp_json['data'] is not None:
+                    details = resp_json['data']['details']
+                    if details:
+                        df_list = []
+                        for detail in details:
+                            parts = detail.split(',')
+                            if len(parts) >= 5:
+                                df_list.append(parts)
+                        
+                        if df_list:
+                            df = pd.DataFrame(df_list)
+                            # 动态设置列名，根据实际数据列数
+                            if len(df.columns) == 5:
+                                df.columns = ['时间', '价格', '涨跌', '成交量', '成交额']
+                                numeric_cols = ['价格', '涨跌', '成交量', '成交额']
+                            elif len(df.columns) == 6:
+                                df.columns = ['时间', '价格', '涨跌', '成交量', '成交额', '性质']
+                                numeric_cols = ['价格', '涨跌', '成交量', '成交额']
+                            else:
+                                # 如果列数不匹配，使用通用列名
+                                df.columns = [f'col_{i}' for i in range(len(df.columns))]
+                                print(f"警告：集合竞价数据列数为 {len(df.columns)}，使用通用列名")
+                                return df
+                            
+                            # 转换数据类型
+                            try:
+                                df[numeric_cols] = df[numeric_cols].astype(float)
+                            except:
+                                print("警告：数据类型转换失败，返回原始数据")
+                            
+                            return df
+                            
+            elif auction_type == '分时成交':
+                # 获取分时成交明细
+                url = f'http://push2.eastmoney.com/api/qt/stock/details/get?fields1=f1,f2,f3,f4&fields2=f51,f52,f53,f54,f55&secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&_={timestamp}'
+                
+                resp = requests.get(url=url, headers=headers)
+                resp_json = resp.json()
+                
+                if 'data' in resp_json and resp_json['data'] is not None:
+                    details = resp_json['data']['details']
+                    if details:
+                        df_list = []
+                        for detail in details:
+                            parts = detail.split(',')
+                            if len(parts) >= 5:
+                                df_list.append(parts)
+                        
+                        if df_list:
+                            df = pd.DataFrame(df_list)
+                            # 动态设置列名，根据实际数据列数
+                            if len(df.columns) == 5:
+                                df.columns = ['时间', '价格', '涨跌', '成交量', '成交额']
+                                numeric_cols = ['价格', '涨跌', '成交量', '成交额']
+                            elif len(df.columns) == 6:
+                                df.columns = ['时间', '价格', '涨跌', '成交量', '成交额', '性质']
+                                numeric_cols = ['价格', '涨跌', '成交量', '成交额']
+                            else:
+                                # 如果列数不匹配，使用通用列名
+                                df.columns = [f'col_{i}' for i in range(len(df.columns))]
+                                print(f"警告：分时成交数据列数为 {len(df.columns)}，使用通用列名")
+                                return df
+                            
+                            # 转换数据类型
+                            try:
+                                df[numeric_cols] = df[numeric_cols].astype(float)
+                            except:
+                                print("警告：数据类型转换失败，返回原始数据")
+                            
+                            return df
+                            
+            print(f'获取{stock_code}竞价数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取{stock_code}竞价数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stock_bid_ask_data_from_eastmoney(self, stock_code: str) -> pd.DataFrame:
+        """
+        获取个股五档买卖盘口数据
+        :param stock_code: 股票代码，如 'sh600519' 或 '600519'
+        :return: 包含五档买卖数据的DataFrame
+        """
+        if len(stock_code) == 6:
+            symbol = stock_code
+        elif len(stock_code) == 8:
+            symbol = stock_code[2:]
+        else:
+            return pd.DataFrame()
+
+        if symbol[0] == '6':
+            market = '1'
+        elif symbol[0] == '0' or symbol[0] == '3':
+            market = '0'
+        else:
+            market = '0'
+        secid = market + '.' + symbol
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+
+        timestamp = int(time.time() * 1000)
+        
+        # 获取五档买卖盘口数据
+        fields = 'f31,f32,f33,f34,f35,f36,f37,f38,f39,f40,f19,f20,f21,f22,f23,f24,f25,f26,f27,f28'
+        url = f'http://push2.eastmoney.com/api/qt/stock/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields={fields}&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                data = resp_json['data']
+                
+                # 构建五档买卖数据
+                bid_ask_data = {
+                    '股票代码': stock_code,
+                    '卖五价': data.get('f31', 0),
+                    '卖五量': data.get('f32', 0),
+                    '卖四价': data.get('f33', 0),
+                    '卖四量': data.get('f34', 0),
+                    '卖三价': data.get('f35', 0),
+                    '卖三量': data.get('f36', 0),
+                    '卖二价': data.get('f37', 0),
+                    '卖二量': data.get('f38', 0),
+                    '卖一价': data.get('f39', 0),
+                    '卖一量': data.get('f40', 0),
+                    '买一价': data.get('f19', 0),
+                    '买一量': data.get('f20', 0),
+                    '买二价': data.get('f21', 0),
+                    '买二量': data.get('f22', 0),
+                    '买三价': data.get('f23', 0),
+                    '买三量': data.get('f24', 0),
+                    '买四价': data.get('f25', 0),
+                    '买四量': data.get('f26', 0),
+                    '买五价': data.get('f27', 0),
+                    '买五量': data.get('f28', 0)
+                }
+                
+                df = pd.DataFrame([bid_ask_data])
+                return df
+            
+            print(f'获取{stock_code}五档买卖数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取{stock_code}五档买卖数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stock_minute_data_from_eastmoney(self, stock_code: str, ndays: int = 1) -> pd.DataFrame:
+        """
+        获取个股分时数据
+        :param stock_code: 股票代码，如 'sh600519' 或 '600519'
+        :param ndays: 获取天数，1=当日，5=5天
+        :return: 包含分时数据的DataFrame
+        """
+        if len(stock_code) == 6:
+            symbol = stock_code
+        elif len(stock_code) == 8:
+            symbol = stock_code[2:]
+        else:
+            return pd.DataFrame()
+
+        if symbol[0] == '6':
+            market = '1'
+        elif symbol[0] == '0' or symbol[0] == '3':
+            market = '0'
+        else:
+            market = '0'
+        secid = market + '.' + symbol
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+
+        timestamp = int(time.time() * 1000)
+        
+        # 获取分时数据
+        url = f'http://push2his.eastmoney.com/api/qt/stock/trends2/get?fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f17&fields2=f51,f52,f53,f54,f55,f56,f57,f58&secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&ndays={ndays}&iscr=0&iscca=0&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                trends = resp_json['data']['trends']
+                if trends:
+                    df_list = []
+                    for trend in trends:
+                        parts = trend.split(',')
+                        if len(parts) >= 8:
+                            df_list.append(parts)
+                    
+                    if df_list:
+                        df = pd.DataFrame(df_list)
+                        df.columns = ['时间', '价格', '成交量', '成交额', '均价', '买入', '卖出', '最新量']
+                        
+                        # 转换数据类型
+                        numeric_cols = ['价格', '成交量', '成交额', '均价', '买入', '卖出', '最新量']
+                        df[numeric_cols] = df[numeric_cols].astype(float)
+                        
+                        return df
+            
+            print(f'获取{stock_code}分时数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取{stock_code}分时数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_industry_data_from_eastmoney(self, sort_field: str = 'f3') -> pd.DataFrame:
+        """
+        获取行业板块数据
+        :param sort_field: 排序字段，f3=涨跌幅，f62=主力净流入，f84=总市值
+        :return: 包含行业板块数据的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+        
+        timestamp = int(time.time() * 1000)
+        
+        # 行业板块数据API
+        fields = 'f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f62,f184,f66,f69,f72,f75,f78,f81,f82,f84,f85,f86,f87,f124'
+        url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=500&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid={sort_field}&fs=m:90+t:2+f:!50&fields={fields}&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                df = pd.DataFrame(resp_json['data']['diff'])
+                
+                if not df.empty:
+                    # 选择并重命名列
+                    df = df[['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f15', 'f16', 'f17', 'f18', 'f20', 'f21', 'f62', 'f184', 'f84', 'f124']]
+                    
+                    rename_dict = {
+                        'f12': '行业代码',
+                        'f14': '行业名称', 
+                        'f2': '最新价',
+                        'f3': '涨跌幅',
+                        'f4': '涨跌额',
+                        'f5': '成交量',
+                        'f6': '成交额',
+                        'f7': '振幅',
+                        'f15': '最高价',
+                        'f16': '最低价',
+                        'f17': '开盘价',
+                        'f18': '昨收价',
+                        'f20': '总市值',
+                        'f21': '流通市值',
+                        'f62': '主力净流入',
+                        'f184': '主力净流入占比',
+                        'f84': '总股本',
+                        'f124': '更新时间'
+                    }
+                    
+                    df.rename(columns=rename_dict, inplace=True)
+                    
+                    # 转换数据类型
+                    numeric_cols = ['最新价', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '最高价', '最低价', '开盘价', '昨收价', '总市值', '流通市值', '主力净流入', '主力净流入占比', '总股本']
+                    df[numeric_cols] = df[numeric_cols].astype(float)
+                    
+                    return df
+            
+            print('获取行业板块数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取行业板块数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_concept_data_from_eastmoney(self, sort_field: str = 'f3') -> pd.DataFrame:
+        """
+        获取概念板块数据
+        :param sort_field: 排序字段，f3=涨跌幅，f62=主力净流入，f84=总市值
+        :return: 包含概念板块数据的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+        
+        timestamp = int(time.time() * 1000)
+        
+        # 概念板块数据API
+        fields = 'f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f62,f184,f66,f69,f72,f75,f78,f81,f82,f84,f85,f86,f87,f124'
+        url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=1000&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid={sort_field}&fs=m:90+t:3+f:!50&fields={fields}&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                df = pd.DataFrame(resp_json['data']['diff'])
+                
+                if not df.empty:
+                    # 选择并重命名列
+                    df = df[['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f15', 'f16', 'f17', 'f18', 'f20', 'f21', 'f62', 'f184', 'f84', 'f124']]
+                    
+                    rename_dict = {
+                        'f12': '概念代码',
+                        'f14': '概念名称', 
+                        'f2': '最新价',
+                        'f3': '涨跌幅',
+                        'f4': '涨跌额',
+                        'f5': '成交量',
+                        'f6': '成交额',
+                        'f7': '振幅',
+                        'f15': '最高价',
+                        'f16': '最低价',
+                        'f17': '开盘价',
+                        'f18': '昨收价',
+                        'f20': '总市值',
+                        'f21': '流通市值',
+                        'f62': '主力净流入',
+                        'f184': '主力净流入占比',
+                        'f84': '总股本',
+                        'f124': '更新时间'
+                    }
+                    
+                    df.rename(columns=rename_dict, inplace=True)
+                    
+                    # 转换数据类型
+                    numeric_cols = ['最新价', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '最高价', '最低价', '开盘价', '昨收价', '总市值', '流通市值', '主力净流入', '主力净流入占比', '总股本']
+                    df[numeric_cols] = df[numeric_cols].astype(float)
+                    
+                    return df
+            
+            print('获取概念板块数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取概念板块数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stock_industry_info_from_eastmoney(self, stock_code: str) -> dict:
+        """
+        获取个股所属行业和概念信息
+        :param stock_code: 股票代码，如 'sh600519' 或 '600519'
+        :return: 包含行业和概念信息的字典
+        """
+        if len(stock_code) == 6:
+            symbol = stock_code
+        elif len(stock_code) == 8:
+            symbol = stock_code[2:]
+        else:
+            return {}
+
+        if symbol[0] == '6':
+            market = '1'
+        elif symbol[0] == '0' or symbol[0] == '3':
+            market = '0'
+        else:
+            market = '0'
+        secid = market + '.' + symbol
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+
+        timestamp = int(time.time() * 1000)
+        
+        # 获取股票详细信息，包含行业和概念
+        url = f'http://push2.eastmoney.com/api/qt/stock/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields=f57,f58,f84,f85,f86,f87,f127,f116,f117&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                data = resp_json['data']
+                
+                stock_info = {
+                    '股票代码': stock_code,
+                    '股票名称': data.get('f58', ''),
+                    '所属行业': data.get('f127', ''),
+                    '概念板块': data.get('f116', ''),
+                    '地区': data.get('f117', ''),
+                    '总股本': data.get('f84', 0),
+                    '流通股': data.get('f85', 0),
+                    '每股收益': data.get('f86', 0),
+                    '每股净资产': data.get('f87', 0)
+                }
+                
+                return stock_info
+            
+            print(f'获取{stock_code}行业概念信息失败')
+            return {}
+            
+        except Exception as e:
+            print(f'获取{stock_code}行业概念信息出错：{e}')
+            return {}
+
+    def get_hot_concepts_from_eastmoney(self, limit: int = 50) -> pd.DataFrame:
+        """
+        获取热门概念板块排行
+        :param limit: 返回数量限制
+        :return: 包含热门概念的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+        
+        timestamp = int(time.time() * 1000)
+        
+        # 热门概念API（按涨跌幅排序）
+        fields = 'f12,f14,f2,f3,f4,f5,f6,f7,f62,f184,f104,f105,f140,f141,f136'
+        url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz={limit}&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m:90+t:3+f:!50&fields={fields}&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                df = pd.DataFrame(resp_json['data']['diff'])
+                
+                if not df.empty:
+                    # 选择并重命名列
+                    df = df[['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f62', 'f184', 'f104', 'f105']]
+                    
+                    rename_dict = {
+                        'f12': '概念代码',
+                        'f14': '概念名称', 
+                        'f2': '最新指数',
+                        'f3': '涨跌幅',
+                        'f4': '涨跌额',
+                        'f5': '成交量',
+                        'f6': '成交额',
+                        'f7': '振幅',
+                        'f62': '主力净流入',
+                        'f184': '主力净流入占比',
+                        'f104': '上涨家数',
+                        'f105': '下跌家数'
+                    }
+                    
+                    df.rename(columns=rename_dict, inplace=True)
+                    
+                    # 转换数据类型
+                    numeric_cols = ['最新指数', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '主力净流入', '主力净流入占比', '上涨家数', '下跌家数']
+                    df[numeric_cols] = df[numeric_cols].astype(float)
+                    
+                    return df
+            
+            print('获取热门概念数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取热门概念数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_stocks_by_concept_from_eastmoney(self, concept_code: str) -> pd.DataFrame:
+        """
+        获取指定概念板块的成分股
+        :param concept_code: 概念板块代码
+        :return: 包含成分股数据的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
+        }
+        
+        timestamp = int(time.time() * 1000)
+        
+        # 概念成分股API
+        fields = 'f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f22,f11,f62,f128,f136,f115,f152'
+        url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=2000&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=b:{concept_code}+f:!50&fields={fields}&_={timestamp}'
+
+        try:
+            resp = requests.get(url=url, headers=headers)
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                df = pd.DataFrame(resp_json['data']['diff'])
+                
+                if not df.empty:
+                    # 选择并重命名列
+                    df = df[['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f15', 'f16', 'f17', 'f18', 'f20', 'f21', 'f62']]
+                    
+                    rename_dict = {
+                        'f12': '股票代码',
+                        'f14': '股票名称', 
+                        'f2': '最新价',
+                        'f3': '涨跌幅',
+                        'f4': '涨跌额',
+                        'f5': '成交量',
+                        'f6': '成交额',
+                        'f7': '振幅',
+                        'f15': '最高价',
+                        'f16': '最低价',
+                        'f17': '开盘价',
+                        'f18': '昨收价',
+                        'f20': '总市值',
+                        'f21': '流通市值',
+                        'f62': '主力净流入'
+                    }
+                    
+                    df.rename(columns=rename_dict, inplace=True)
+                    
+                    # 添加交易所前缀
+                    df['股票代码'] = df['股票代码'].apply(self.symbol_to_stock_code)
+                    
+                    # 转换数据类型
+                    numeric_cols = ['最新价', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '最高价', '最低价', '开盘价', '昨收价', '总市值', '流通市值', '主力净流入']
+                    df[numeric_cols] = df[numeric_cols].astype(float)
+                    
+                    return df
+            
+            print(f'获取概念{concept_code}成分股数据失败')
+            return pd.DataFrame()
+            
+        except Exception as e:
+            print(f'获取概念{concept_code}成分股数据出错：{e}')
             return pd.DataFrame()
 
 

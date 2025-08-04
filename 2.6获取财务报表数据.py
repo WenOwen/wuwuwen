@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-# @老师微信:samequant
-# @网站:打板哥网 www.dabange.com
-# @更多源码下载地址: https://dabange.com/download
-# @有偿服务：量化课程、量化数据、策略代写、实盘对接...
-
 from tdx import Tdx_datas
 # 从通达信获取历史财报数据
 tdx_f_1 = Tdx_datas()
