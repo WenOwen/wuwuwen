@@ -1,0 +1,62 @@
+version: '3.8'
+
+# Docker跨网络部署方案 - 代码和数据分离，支持云端数据传输
+# 适用于原电脑和服务器不在同一局域网的场景
+
+services:
+  # AI股市预测主服务
+  stock-prediction:
+    build: .
+    container_name: wuwuquant-app
+    ports:
+      - "8000:8000"  # API服务
+      - "8501:8501"  # Web界面
+    volumes:
+      - ./datas_em:/app/datas_em      # 数据目录
+      - ./models:/app/models          # 模型目录
+      - ./logs:/app/logs              # 日志目录
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_HOST=redis
+      # 数据源配置
+      - DATA_SOURCE_TYPE=${DATA_SOURCE_TYPE:-auto}
+      - DATA_PACKAGE_URL=${DATA_PACKAGE_URL:-}
+      - AUTO_DOWNLOAD_DATA=${AUTO_DOWNLOAD_DATA:-true}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo '🚀 启动AI股市预测系统...' &&
+        python data_downloader.py &&
+        echo '✅ 数据准备完成，启动服务...' &&
+        uvicorn prediction_service:app --host 0.0.0.0 --port 8000 &
+        streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+      "
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: wuwuquant-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --maxmemory 1gb --maxmemory-policy allkeys-lru
+
+volumes:
+  redis_data:
+
+# 环境变量配置文件 .env 示例:
+# 百度网盘方案
+# DATA_SOURCE_TYPE=baidu
+# DATA_PACKAGE_URL=https://pan.baidu.com/s/xxxxx
+# 
+# 阿里云OSS方案  
+# DATA_SOURCE_TYPE=aliyun
+# DATA_PACKAGE_URL=oss://your-bucket/package.tar.gz
+#
+# 自动检测
+# DATA_SOURCE_TYPE=auto
+# AUTO_DOWNLOAD_DATA=true

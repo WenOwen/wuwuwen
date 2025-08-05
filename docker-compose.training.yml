@@ -1,0 +1,81 @@
+version: '3.8'
+
+# 专用于模型训练的Docker配置
+# 优化了GPU使用和资源分配
+
+services:
+  # AI模型训练服务
+  ai-trainer:
+    build: 
+      context: .
+      dockerfile: Dockerfile.training
+    container_name: wuwuquant-trainer
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=0  # 指定GPU
+      - TF_FORCE_GPU_ALLOW_GROWTH=true
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+    volumes:
+      - ./datas_em:/app/datas_em:ro  # 只读数据
+      - ./models:/app/models         # 模型输出
+      - ./logs:/app/logs            # 训练日志
+      - ./config:/app/config:ro     # 配置文件
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: python training_pipeline.py --auto-train --gpu
+    restart: unless-stopped
+    
+  # Redis缓存（轻量版）
+  redis-lite:
+    image: redis:7-alpine
+    container_name: wuwuquant-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_training_data:/data
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    
+  # 性能监控
+  monitor:
+    build: .
+    container_name: wuwuquant-monitor
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker监控
+    depends_on:
+      - ai-trainer
+      - redis-lite
+    command: python performance_monitor.py --training-mode
+    restart: unless-stopped
+    
+  # 可选：Jupyter Lab用于调试
+  jupyter:
+    build: .
+    container_name: wuwuquant-jupyter
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''
+    profiles:
+      - debug  # 使用 --profile debug 启动
+
+volumes:
+  redis_training_data:
+    
+# 使用方法：
+# 1. 正常训练: docker-compose -f docker-compose.training.yml up -d
+# 2. 包含调试: docker-compose -f docker-compose.training.yml --profile debug up -d  
+# 3. 查看日志: docker-compose -f docker-compose.training.yml logs -f ai-trainer

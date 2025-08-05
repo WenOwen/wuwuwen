@@ -1,0 +1,46 @@
+{
+  "description": "跨网络部署数据源配置",
+  "version": "1.0",
+  "sources": [
+    {
+      "name": "阿里云OSS",
+      "type": "oss",
+      "bucket": "your-oss-bucket",
+      "prefix": "stock-data/",
+      "endpoint": "oss-cn-beijing.aliyuncs.com",
+      "enabled": false,
+      "priority": 1,
+      "description": "阿里云对象存储（推荐生产环境）"
+    },
+    {
+      "name": "AWS S3存储",
+      "type": "s3", 
+      "bucket": "your-stock-data-bucket",
+      "prefix": "stock-data/",
+      "region": "us-east-1",
+      "enabled": false,
+      "priority": 2,
+      "description": "AWS S3对象存储"
+    },
+    {
+      "name": "本地备份",
+      "type": "local",
+      "path": "/backup/datas_em",
+      "enabled": false,
+      "priority": 3,
+      "description": "本地备份目录"
+    }
+  ],
+  "data_validation": {
+    "min_file_count": 100,
+    "min_total_size_mb": 10,
+    "required_columns": [
+      "日期",
+      "开盘",
+      "最高", 
+      "最低",
+      "收盘",
+      "成交量"
+    ]
+  }
+}

@@ -1,0 +1,75 @@
+# 直接创建并写入.gitignore内容
+@"
+# ===========================================
+# AI股市预测系统 - Git忽略文件配置
+# ===========================================
+
+# 数据文件（最重要！）
+datas_em/
+datas_QMT/
+datas_index/
+financial_csv/
+stockcode_list/
+
+# CSV数据文件
+*.csv
+
+# 训练好的模型文件
+models/
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# 日志文件
+logs/
+*.log
+error_txt/
+
+# 临时文件
+tmp/
+*.tmp
+*.temp
+
+# 生成的数据包
+stock_data_*.tar.gz
+stock_data_*.zip
+wuwuquant_complete_*.tar.gz
+
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 环境配置文件
+.env
+.env.local
+.env.production
+
+# IDE文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Redis数据
+dump.rdb
+*.rdb
+
+# 数据库文件
+*.db
+*.sqlite3
+performance.db
+
+# 发布目录
+published_data/
+deploy_temp/
+backup/
+"@ | Out-File -FilePath ".gitignore" -Encoding UTF8
+
+Write-Host "✅ .gitignore文件创建完成" -ForegroundColor Green
