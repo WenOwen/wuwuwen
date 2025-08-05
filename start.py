@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 def check_python_version():
     """检查Python版本"""
-    if sys.version_info < (3, 9):
-        logger.error("Python版本必须≥3.9，当前版本: %s", sys.version)
+    if sys.version_info < (3, 8):
+        logger.error("Python版本必须≥3.8，当前版本: %s", sys.version)
         return False
     logger.info("Python版本检查通过: %s", sys.version.split()[0])
     return True

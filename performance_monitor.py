@@ -11,8 +11,8 @@ from typing import Dict, List, Tuple, Optional
 import sqlite3
 import json
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import logging
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
@@ -380,7 +380,7 @@ class PerformanceMonitor:
             body = "检测到以下性能问题：\n\n" + "\n".join(f"• {alert}" for alert in alerts)
             body += f"\n\n告警时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
             
-            msg.attach(MimeText(body, 'plain', 'utf-8'))
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))
             
             # 发送邮件
             server = smtplib.SMTP(self.config['smtp_server'], self.config['smtp_port'])
