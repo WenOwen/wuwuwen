@@ -1,61 +1,90 @@
-# 直接创建并写入.gitignore内容
-@"
 # ===========================================
 # AI股市预测系统 - Git忽略文件配置
 # ===========================================
 
-# 数据文件（最重要！）
+# 数据目录（最重要！）
+data/
 datas_em/
 datas_QMT/
 datas_index/
 financial_csv/
 stockcode_list/
+get_opening_calendar_from_szse/
 
 # CSV数据文件
 *.csv
 
 # 训练好的模型文件
 models/
-*.pkl
+*.pkl  
 *.joblib
 *.h5
 *.model
+*.ckpt
+*.pb
+*.onnx
 
 # 日志文件
 logs/
 *.log
 error_txt/
+training.log
 
-# 临时文件
+# 临时文件和缓存
 tmp/
 *.tmp
 *.temp
-
-# 生成的数据包
-stock_data_*.tar.gz
-stock_data_*.zip
-wuwuquant_complete_*.tar.gz
+cache/
+.cache/
 
 # Python缓存文件
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# 机器学习相关缓存
+.sklearn_cache/
+tensorboard_logs/
+mlruns/
+.wandb/
+
+# 生成的数据包和压缩文件
+stock_data_*.tar.gz
+stock_data_*.zip  
+wuwuquant_complete_*.tar.gz
+*.zip
+*.tar.gz
+*.rar
 
 # 环境配置文件
 .env
 .env.local
 .env.production
+.env.development
+config.ini
+secrets.yaml
 
-# IDE文件
+# IDE和编辑器文件
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.sublime-*
 
 # 系统文件
 .DS_Store
 Thumbs.db
+desktop.ini
+.directory
 
 # Redis数据
 dump.rdb
@@ -64,12 +93,43 @@ dump.rdb
 # 数据库文件
 *.db
 *.sqlite3
+*.sqlite
 performance.db
 
-# 发布目录
+# 发布和部署目录
 published_data/
 deploy_temp/
 backup/
-"@ | Out-File -FilePath ".gitignore" -Encoding UTF8
+dist/
+build/
+.build/
 
-Write-Host "✅ .gitignore文件创建完成" -ForegroundColor Green
+# Docker相关
+.dockerignore
+docker-compose.override.yml
+
+# 密钥和证书文件
+*.key
+*.pem
+*.crt
+*.cert
+*.p12
+api_keys.txt
+
+# 大文件和模型权重
+*.bin
+*.safetensors
+checkpoint-*/
+
+# 临时创建的文件
+=0.*
+dump.*
+nohup.out
+
+# 性能分析文件
+*.prof
+*.profile
+
+# 测试覆盖率
+.coverage.*
+coverage.xml
