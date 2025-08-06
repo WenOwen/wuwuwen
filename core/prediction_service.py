@@ -20,9 +20,19 @@ import schedule
 import time
 from threading import Thread
 
-from feature_engineering import FeatureEngineering
-from ai_models import EnsembleModel, create_ensemble_model
-from training_pipeline import ModelTrainingPipeline, AutoRetrainingSystem
+# 导入处理 - 支持直接运行和模块导入
+try:
+    from .feature_engineering import FeatureEngineering
+    from .ai_models import EnsembleModel, create_ensemble_model
+    from .training_pipeline import ModelTrainingPipeline, AutoRetrainingSystem
+except ImportError:
+    # 直接运行时的导入
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from feature_engineering import FeatureEngineering
+    from ai_models import EnsembleModel, create_ensemble_model
+    from training_pipeline import ModelTrainingPipeline, AutoRetrainingSystem
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)

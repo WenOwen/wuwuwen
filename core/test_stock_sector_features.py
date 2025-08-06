@@ -5,9 +5,19 @@
 
 import numpy as np
 import pandas as pd
-from stock_sector_mapping import StockSectorMapping
-from feature_engineering import FeatureEngineering
-from enhanced_ai_models import create_enhanced_ensemble_model
+# 导入处理 - 支持直接运行和模块导入
+try:
+    from .stock_sector_mapping import StockSectorMapping
+    from .feature_engineering import FeatureEngineering
+    from .enhanced_ai_models import create_enhanced_ensemble_model
+except ImportError:
+    # 直接运行时的导入
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from stock_sector_mapping import StockSectorMapping
+    from feature_engineering import FeatureEngineering
+    from enhanced_ai_models import create_enhanced_ensemble_model
 
 def test_stock_sector_mapping():
     """测试股票板块映射功能"""

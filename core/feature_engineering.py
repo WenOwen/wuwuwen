@@ -6,32 +6,67 @@ AI股市预测系统 - 特征工程模块
 
 import pandas as pd
 import numpy as np
-import talib
 from typing import Dict, List, Tuple, Optional
 import warnings
 warnings.filterwarnings('ignore')
 
-from stock_sector_mapping import StockSectorMapping
+# 可选导入talib
+try:
+    import talib
+    TALIB_AVAILABLE = True
+except ImportError:
+    TALIB_AVAILABLE = False
+    print("⚠️  警告: TA-Lib未安装，将使用简化的技术指标计算")
+
+# 导入处理 - 支持直接运行和模块导入
+try:
+    from .stock_sector_mapping import StockSectorMapping
+    from .sector_features import SectorFeatureEngineer
+except ImportError:
+    # 直接运行时的导入
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from stock_sector_mapping import StockSectorMapping
+    from sector_features import SectorFeatureEngineer
 
 class FeatureEngineering:
     """
     特征工程类 - 将原始股票数据转换为机器学习特征
     """
     
-    def __init__(self):
+    def __init__(self, enable_cache: bool = True, cache_dir: str = "cache/features"):
         self.feature_names = []
         self.technical_indicators = [
             'SMA', 'EMA', 'RSI', 'MACD', 'BOLL', 'KDJ', 
             'CCI', 'WILLR', 'OBV', 'ATR', 'ADXR'
         ]
         self.sector_mapping = StockSectorMapping()
+        self.sector_feature_engineer = SectorFeatureEngineer()
         self.all_sector_features = {}
+        
+        # 缓存系统
+        self.enable_cache = enable_cache
+        if enable_cache:
+            try:
+                from .feature_cache import FeatureCache
+                self.cache = FeatureCache(cache_dir)
+            except ImportError:
+                # 直接运行时的导入
+                import sys
+                import os
+                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                from feature_cache import FeatureCache
+                self.cache = FeatureCache(cache_dir)
+        else:
+            self.cache = None
     
     def create_all_features(self, df: pd.DataFrame, 
                            stock_code: str,
                            money_flow_df: pd.DataFrame = None,
                            industry_df: pd.DataFrame = None,
-                           sector_data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+                           sector_data: Optional[pd.DataFrame] = None,
+                           force_recalculate: bool = False) -> pd.DataFrame:
         """
         创建所有特征
         
@@ -41,61 +76,68 @@ class FeatureEngineering:
             money_flow_df: 资金流向数据（可选）
             industry_df: 行业数据（可选）
             sector_data: 板块数据（可选）
+            force_recalculate: 是否强制重新计算（忽略缓存）
             
         Returns:
             包含所有特征的DataFrame
         """
-        print("🔧 开始特征工程...")
+        # 保存原始数据用于缓存
+        original_df_for_cache = df.copy()
+        
+        # 尝试从缓存获取（如果启用且不强制重计算）
+        if self.enable_cache and self.cache and not force_recalculate:
+            cached_features = self.cache.get_cached_features(stock_code, original_df_for_cache)
+            if cached_features is not None:
+                return cached_features
+        
+        # 静默特征工程处理
         
         # 确保数据按日期排序
         df = df.sort_values('交易日期').reset_index(drop=True)
         
         # 1. 基础价格特征
         df = self._add_price_features(df)
-        print("✅ 价格特征完成")
         
         # 2. 技术指标特征
         df = self._add_technical_indicators(df)
-        print("✅ 技术指标完成")
         
         # 3. 成交量特征
         df = self._add_volume_features(df)
-        print("✅ 成交量特征完成")
         
         # 4. 波动率特征
         df = self._add_volatility_features(df)
-        print("✅ 波动率特征完成")
         
         # 5. 时间序列特征
         df = self._add_time_series_features(df)
-        print("✅ 时间序列特征完成")
         
         # 6. 市场微观结构特征
         df = self._add_microstructure_features(df)
-        print("✅ 市场微观结构特征完成")
         
         # 7. 资金流向特征（如果有数据）
         if money_flow_df is not None:
             df = self._add_money_flow_features(df, money_flow_df)
-            print("✅ 资金流向特征完成")
         
         # 8. 相对强度特征
         df = self._add_relative_strength_features(df)
-        print("✅ 相对强度特征完成")
         
         # 9. 形态识别特征
         df = self._add_pattern_features(df)
-        print("✅ 形态识别特征完成")
         
         # 10. 股票标识和板块特征
         df = self._add_stock_and_sector_features(df, stock_code, sector_data)
-        print("✅ 股票标识和板块特征完成")
         
         # 11. 创建预测标签
         df = self._create_prediction_labels(df)
-        print("✅ 预测标签完成")
         
-        print(f"🎉 特征工程完成！总计 {len(df.columns)} 个特征")
+        # 特征工程完成
+        
+        # 保存到缓存（如果启用）
+        if self.enable_cache and self.cache:
+            try:
+                self.cache.save_features_to_cache(stock_code, original_df_for_cache, df)
+            except Exception as e:
+                print(f"⚠️ 缓存保存失败 {stock_code}: {e}")
+        
         return df
     
     def _add_price_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -129,29 +171,52 @@ class FeatureEngineering:
     def _add_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """添加技术指标特征"""
         
-        close = df['收盘价'].values
-        high = df['最高价'].values
-        low = df['最低价'].values
-        open_price = df['开盘价'].values
-        volume = df['成交量'].values
+        # 确保数据类型为float64，talib要求输入必须是double类型
+        close = df['收盘价'].astype(np.float64).values
+        high = df['最高价'].astype(np.float64).values
+        low = df['最低价'].astype(np.float64).values
+        open_price = df['开盘价'].astype(np.float64).values
+        volume = df['成交量'].astype(np.float64).values
         
         # 移动平均线
         for period in [5, 10, 20, 30, 60]:
-            df[f'SMA_{period}'] = talib.SMA(close, timeperiod=period)
-            df[f'EMA_{period}'] = talib.EMA(close, timeperiod=period)
+            if TALIB_AVAILABLE:
+                df[f'SMA_{period}'] = talib.SMA(close, timeperiod=period)
+                df[f'EMA_{period}'] = talib.EMA(close, timeperiod=period)
+            else:
+                df[f'SMA_{period}'] = close.rolling(window=period).mean()
+                df[f'EMA_{period}'] = close.ewm(span=period).mean()
             df[f'close_sma_{period}_ratio'] = df['收盘价'] / df[f'SMA_{period}']
             df[f'close_ema_{period}_ratio'] = df['收盘价'] / df[f'EMA_{period}']
         
         # RSI
         for period in [6, 14, 21]:
-            df[f'RSI_{period}'] = talib.RSI(close, timeperiod=period)
+            if TALIB_AVAILABLE:
+                df[f'RSI_{period}'] = talib.RSI(close, timeperiod=period)
+            else:
+                # 简化的RSI计算
+                delta = pd.Series(close).diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+                rs = gain / loss
+                df[f'RSI_{period}'] = 100 - (100 / (1 + rs))
         
         # MACD
-        macd, macd_signal, macd_hist = talib.MACD(close, fastperiod=12, slowperiod=26, signalperiod=9)
-        df['MACD'] = macd
-        df['MACD_signal'] = macd_signal
-        df['MACD_hist'] = macd_hist
-        df['MACD_cross'] = np.where(macd > macd_signal, 1, 0)
+        if TALIB_AVAILABLE:
+            macd, macd_signal, macd_hist = talib.MACD(close, fastperiod=12, slowperiod=26, signalperiod=9)
+            df['MACD'] = macd
+            df['MACD_signal'] = macd_signal
+            df['MACD_hist'] = macd_hist
+        else:
+            # 简化的MACD计算
+            ema12 = pd.Series(close).ewm(span=12).mean()
+            ema26 = pd.Series(close).ewm(span=26).mean()
+            macd = ema12 - ema26
+            macd_signal = macd.ewm(span=9).mean()
+            df['MACD'] = macd
+            df['MACD_signal'] = macd_signal
+            df['MACD_hist'] = macd - macd_signal
+        df['MACD_cross'] = np.where(df['MACD'] > df['MACD_signal'], 1, 0)
         
         # 布林带
         bb_upper, bb_middle, bb_lower = talib.BBANDS(close, timeperiod=20, nbdevup=2, nbdevdn=2)
@@ -186,8 +251,9 @@ class FeatureEngineering:
     def _add_volume_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """添加成交量特征"""
         
-        volume = df['成交量'].values
-        close = df['收盘价'].values
+        # 确保数据类型为float64，talib要求输入必须是double类型
+        volume = df['成交量'].astype(np.float64).values
+        close = df['收盘价'].astype(np.float64).values
         
         # 成交量移动平均
         for period in [5, 10, 20]:
@@ -222,7 +288,11 @@ class FeatureEngineering:
             df[f'volatility_{period}d'] = df['price_change'].rolling(period).std()
             df[f'volatility_{period}d_norm'] = df[f'volatility_{period}d'] / df[f'volatility_{period}d'].rolling(60).mean()
         
-        # 振幅相关
+        # 计算振幅（如果不存在的话）
+        if '振幅' not in df.columns:
+            df['振幅'] = (df['最高价'] - df['最低价']) / df['收盘价'] * 100
+        
+        # 振幅相关特征
         df['amplitude_ma_5'] = df['振幅'].rolling(5).mean()
         df['amplitude_ma_20'] = df['振幅'].rolling(20).mean()
         df['amplitude_relative'] = df['振幅'] / df['amplitude_ma_20']
@@ -318,10 +388,11 @@ class FeatureEngineering:
     def _add_pattern_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """添加技术形态识别特征"""
         
-        open_price = df['开盘价'].values
-        high = df['最高价'].values
-        low = df['最低价'].values
-        close = df['收盘价'].values
+        # 确保数据类型为float64，talib要求输入必须是double类型
+        open_price = df['开盘价'].astype(np.float64).values
+        high = df['最高价'].astype(np.float64).values
+        low = df['最低价'].astype(np.float64).values
+        close = df['收盘价'].astype(np.float64).values
         
         # 常见K线形态
         df['HAMMER'] = talib.CDLHAMMER(open_price, high, low, close)
@@ -370,12 +441,12 @@ class FeatureEngineering:
     def _add_stock_and_sector_features(self, df: pd.DataFrame, stock_code: str, 
                                      sector_data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         """
-        添加股票标识和板块特征
+        添加股票标识和板块特征（使用新的板块数据）
         
         Args:
             df: 股票数据
             stock_code: 股票代码
-            sector_data: 板块聚合数据
+            sector_data: 板块聚合数据（已弃用，使用新的板块特征数据）
             
         Returns:
             添加了股票和板块特征的DataFrame
@@ -384,51 +455,35 @@ class FeatureEngineering:
         # 获取股票信息
         stock_info = self.sector_mapping.get_stock_info(stock_code)
         
-        # 1. 股票标识特征
+        # 1. 基础股票标识特征
         df['stock_id'] = stock_info['stock_id']
         df['sector_id'] = stock_info['sector_id']
         df['stock_code'] = stock_code
         df['sector_name'] = stock_info['sector']
         
-        # 2. 板块相对强度特征
-        if sector_data is not None and stock_info['sector'] in sector_data.columns:
-            sector_returns = sector_data[stock_info['sector']]
-            
-            # 对齐时间索引
-            if '交易日期' in df.columns:
-                df_indexed = df.set_index('交易日期')
-                sector_indexed = sector_data.set_index('交易日期') if '交易日期' in sector_data.columns else sector_data
-                
-                # 股票相对板块的超额收益
-                stock_returns = df_indexed['price_change'] if 'price_change' in df_indexed.columns else df_indexed['涨跌幅'] / 100
-                
-                # 计算相对强度
-                for window in [5, 10, 20]:
-                    stock_ma = stock_returns.rolling(window).mean()
-                    sector_ma = sector_indexed[stock_info['sector']].rolling(window).mean() if stock_info['sector'] in sector_indexed.columns else 0
-                    df[f'relative_strength_{window}d'] = (stock_ma - sector_ma).values
-                
-                # 相对波动率
-                for window in [5, 10, 20]:
-                    stock_vol = stock_returns.rolling(window).std()
-                    sector_vol = sector_indexed[stock_info['sector']].rolling(window).std() if stock_info['sector'] in sector_indexed.columns else 1
-                    df[f'relative_volatility_{window}d'] = (stock_vol / (sector_vol + 1e-8)).values
+        # 2. 使用新的板块特征工程器添加板块特征
+        df = self.sector_feature_engineer.add_sector_features(df, stock_code, stock_info)
         
-        # 3. 板块特征（如果没有外部板块数据，使用历史统计）
+        # 3. 传统板块特征（保持兼容性）
         if 'price_change' in df.columns:
             # 板块内股票数量（编码特征）
             sector_stocks = self.sector_mapping.get_sector_stocks(stock_info['sector'])
             df['sector_stock_count'] = len(sector_stocks)
             
-            # 板块类型编码（大盘、中盘、小盘等）
-            if stock_info['sector'] in ['银行', '保险', '石油', '钢铁']:
-                df['sector_type'] = 0  # 大盘价值股
-            elif stock_info['sector'] in ['科技', '新能源', '医药']:
-                df['sector_type'] = 1  # 成长股
-            elif stock_info['sector'] in ['食品饮料', '消费', '零售']:
-                df['sector_type'] = 2  # 消费股
+            # 板块类型编码（基于新的行业分类）
+            industry = stock_info.get('sector', '')
+            if industry in ['银行', '保险', '证券', '多元金融']:
+                df['sector_type'] = 0  # 金融股
+            elif industry in ['专用设备', '通用设备', '电网设备', '汽车零部件']:
+                df['sector_type'] = 1  # 制造业
+            elif industry in ['软件开发', '半导体', '电子元件', '通信设备']:
+                df['sector_type'] = 2  # 科技股
+            elif industry in ['化学制药', '生物制品', '医疗器械']:
+                df['sector_type'] = 3  # 医药股
+            elif industry in ['食品加工', '饮料制造', '纺织服装']:
+                df['sector_type'] = 4  # 消费股
             else:
-                df['sector_type'] = 3  # 其他
+                df['sector_type'] = 5  # 其他
         
         # 4. 跨板块相关性特征（简化版）
         market_sensitive_sectors = ['银行', '保险', '钢铁', '煤炭']
@@ -471,11 +526,29 @@ class FeatureEngineering:
         
         # 选择特征列（排除日期、标签、文本等）
         exclude_cols = ['交易日期', 'stock_code', 'sector_name'] + [col for col in df.columns if 'future_' in col]
-        feature_cols = [col for col in df.columns if col not in exclude_cols]
+        
+        # 获取所有可能的特征列
+        potential_cols = [col for col in df.columns if col not in exclude_cols]
+        
+        # 确保只选择数值类型的列，排除所有字符串类型
+        feature_cols = []
+        for col in potential_cols:
+            try:
+                # 尝试转换为数值类型
+                pd.to_numeric(df[col], errors='raise')
+                feature_cols.append(col)
+            except (ValueError, TypeError):
+                # 如果转换失败，排除该列
+                continue
         
         # 分离数值特征和分类特征
         categorical_cols = ['stock_id', 'sector_id', 'sector_type', 'is_market_sensitive', 'is_growth_stock']
+        categorical_cols = [col for col in categorical_cols if col in feature_cols]  # 只保留存在的分类列
         numerical_cols = [col for col in feature_cols if col not in categorical_cols]
+        
+        # 确保所有特征列都是数值类型
+        for col in feature_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
         
         # 填充缺失值
         df[feature_cols] = df[feature_cols].fillna(method='ffill').fillna(0)

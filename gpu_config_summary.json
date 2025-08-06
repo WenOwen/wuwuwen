@@ -1,0 +1,65 @@
+{
+  "gpu_count": 2,
+  "gpu_info": {
+    "GPU_0": "NVIDIA GeForce RTX 3090 (24259 MiB)",
+    "GPU_1": "NVIDIA GeForce RTX 3090 (24268 MiB)"
+  },
+  "recommended_settings": {
+    "batch_sizes": {
+      "small_dataset": 224,
+      "medium_dataset": 448,
+      "large_dataset": 864,
+      "cv_training": 128
+    },
+    "lightgbm_gpu_settings": {
+      "device_type": "gpu",
+      "max_bin": 511,
+      "gpu_use_dp": true,
+      "num_gpu": 2
+    },
+    "memory_settings": {
+      "memory_limit_per_gpu_gb": 22,
+      "total_gpu_memory_gb": 48,
+      "recommended_data_size_gb": 38.400000000000006
+    },
+    "performance_settings": {
+      "cuda_cores_total": 20992,
+      "tensor_cores_total": 656,
+      "memory_bandwidth_total": 1872
+    },
+    "stock_training_optimized": true,
+    "gpu_count": 2
+  },
+  "lightgbm_params": {
+    "objective": "regression",
+    "metric": [
+      "rmse",
+      "mae"
+    ],
+    "boosting_type": "gbdt",
+    "num_boost_round": 1000,
+    "learning_rate": 0.05,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 5,
+    "verbose": 1,
+    "lambda_l1": 0.1,
+    "lambda_l2": 0.1,
+    "min_gain_to_split": 0.02,
+    "drop_rate": 0.1,
+    "early_stopping_rounds": 100,
+    "random_state": 42,
+    "deterministic": true,
+    "device_type": "gpu",
+    "gpu_platform_id": 0,
+    "gpu_device_id": 0,
+    "max_bin": 511,
+    "gpu_use_dp": true,
+    "num_gpu": 2,
+    "num_leaves": 255,
+    "max_depth": 15,
+    "min_data_in_leaf": 10,
+    "parallel_threads": 16
+  },
+  "timestamp": "2025年 08月 06日 星期三 01:35:38 CST"
+}

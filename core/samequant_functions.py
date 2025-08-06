@@ -11,7 +11,24 @@ import time
 import random
 import datetime
 import json
-from get_opening_calendar_from_szse.get_opening_calendar_from_szse import Get_stock_opening_calendar
+# 导入处理 - 支持直接运行和模块导入
+try:
+    from ..get_opening_calendar_from_szse.get_opening_calendar_from_szse import Get_stock_opening_calendar
+except ImportError:
+    # 直接运行时的导入
+    import sys
+    import os
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(project_root)
+    try:
+        from get_opening_calendar_from_szse.get_opening_calendar_from_szse import Get_stock_opening_calendar
+    except ImportError:
+        # 如果仍然无法导入，提供一个简单的替代实现
+        class Get_stock_opening_calendar:
+            def __init__(self):
+                pass
+            def get_calendar(self):
+                return []
 
 pd.set_option('expand_frame_repr', False)  # 当列太多时不换行
 pd.set_option('display.max_rows', 6000)  # 最多显示数据的行数
@@ -1821,32 +1838,161 @@ class Spider_func():
 
         timestamp = int(time.time() * 1000)
         
-        # 获取股票详细信息，包含行业和概念
-        url = f'http://push2.eastmoney.com/api/qt/stock/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields=f57,f58,f84,f85,f86,f87,f127,f116,f117&_={timestamp}'
-
         try:
-            resp = requests.get(url=url, headers=headers)
+            # 第一步：获取基本信息
+            basic_url = f'http://push2.eastmoney.com/api/qt/stock/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields=f57,f58,f84,f85,f86,f87,f127&_={timestamp}'
+            
+            resp = requests.get(url=basic_url, headers=headers)
             resp_json = resp.json()
+            
+            stock_info = {
+                '股票代码': stock_code,
+                '股票名称': '',
+                '所属行业': '',
+                '概念板块': '',
+                '地区': '',
+                '总股本': 0,
+                '流通股': 0,
+                '每股收益': 0,
+                '每股净资产': 0
+            }
             
             if 'data' in resp_json and resp_json['data'] is not None:
                 data = resp_json['data']
                 
-                stock_info = {
-                    '股票代码': stock_code,
+                stock_info.update({
                     '股票名称': data.get('f58', ''),
                     '所属行业': data.get('f127', ''),
-                    '概念板块': data.get('f116', ''),
-                    '地区': data.get('f117', ''),
                     '总股本': data.get('f84', 0),
                     '流通股': data.get('f85', 0),
                     '每股收益': data.get('f86', 0),
                     '每股净资产': data.get('f87', 0)
-                }
-                
-                return stock_info
+                })
             
-            print(f'获取{stock_code}行业概念信息失败')
-            return {}
+            # 第二步：使用多种方法获取概念板块和地区信息
+            concept_found = False
+            region_found = False
+            
+            # 方法1：使用完整字段的股票详情API
+            try:
+                detail_url = f'http://push2.eastmoney.com/api/qt/stock/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields=f116,f117,f127,f128,f136,f173&_={timestamp}'
+                
+                detail_resp = requests.get(url=detail_url, headers=headers)
+                if detail_resp.status_code == 200:
+                    detail_data = detail_resp.json()
+                    
+                    if 'data' in detail_data and detail_data['data']:
+                        data = detail_data['data']
+                        
+                        # 尝试多个可能的字段
+                        concept_fields = ['f128', 'f116', 'f173']
+                        region_fields = ['f136', 'f117']
+                        
+                        # 处理地区信息（f128字段实际是地区板块）
+                        if 'f128' in data:
+                            region_board = data['f128']
+                            if region_board and str(region_board) not in ['-', '0', '']:
+                                # 从"贵州板块"提取"贵州"
+                                region_name = str(region_board).replace('板块', '')
+                                stock_info['地区'] = region_name
+                                region_found = True
+                        
+                        # 尝试获取真正的概念板块信息
+                        if not concept_found:
+                            try:
+                                # 使用个股所属概念板块API
+                                concept_api_url = f'http://push2.eastmoney.com/api/qt/slist/get?spt=1&fltt=2&invt=2&pi=0&pz=200&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f12,f14,f103&fid=f3&secid={secid}&_={timestamp}'
+                                
+                                concept_resp = requests.get(url=concept_api_url, headers=headers)
+                                if concept_resp.status_code == 200:
+                                    concept_data = concept_resp.json()
+                                    
+                                    if 'data' in concept_data and concept_data['data'] and 'diff' in concept_data['data']:
+                                        concepts = concept_data['data']['diff']
+                                        
+                                        # 查找当前股票的概念信息
+                                        for item in concepts:
+                                            if item.get('f12') == symbol:  # 找到当前股票
+                                                concept_list = item.get('f103', '')
+                                                if concept_list and concept_list != '-':
+                                                    stock_info['概念板块'] = concept_list
+                                                    concept_found = True
+                                                    break
+                            except Exception as e:
+                                pass
+                        
+                        # 如果还没找到概念板块，设为空
+                        if not concept_found:
+                            stock_info['概念板块'] = ''
+                
+            except Exception as e:
+                pass
+            
+            # 方法2：如果还没找到，从股票列表中查找
+            if not concept_found or not region_found:
+                try:
+                    # 使用包含更多字段的股票列表API
+                    list_url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=5000&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m:0+t:6+f:!2,m:0+t:13+f:!2,m:0+t:80+f:!2,m:1+t:2+f:!2,m:1+t:23+f:!2,m:0+t:7+f:!2,m:1+t:3+f:!2&fields=f12,f14,f116,f117,f127,f128,f136,f173&_={timestamp}'
+                    
+                    list_resp = requests.get(url=list_url, headers=headers)
+                    if list_resp.status_code == 200:
+                        list_data = list_resp.json()
+                        
+                        if 'data' in list_data and list_data['data'] and 'diff' in list_data['data']:
+                            stocks = list_data['data']['diff']
+                            
+                            # 查找当前股票
+                            for stock in stocks:
+                                if stock.get('f12') == symbol:  # f12是股票代码
+                                    # 处理地区信息（f128是地区板块）
+                                    if not region_found and 'f128' in stock:
+                                        region_board = stock['f128']
+                                        if region_board and str(region_board) not in ['-', '0', '']:
+                                            # 从"贵州板块"提取"贵州"
+                                            region_name = str(region_board).replace('板块', '')
+                                            stock_info['地区'] = region_name
+                                            region_found = True
+                                    
+                                    # 如果还没找到概念板块，尝试获取
+                                    if not concept_found:
+                                        try:
+                                            # 使用个股所属概念板块API
+                                            concept_api_url = f'http://push2.eastmoney.com/api/qt/slist/get?spt=1&fltt=2&invt=2&pi=0&pz=200&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fields=f12,f14,f103&fid=f3&secid={secid}&_={timestamp}'
+                                            
+                                            concept_resp = requests.get(url=concept_api_url, headers=headers)
+                                            if concept_resp.status_code == 200:
+                                                concept_data = concept_resp.json()
+                                                
+                                                if 'data' in concept_data and concept_data['data'] and 'diff' in concept_data['data']:
+                                                    concepts = concept_data['data']['diff']
+                                                    
+                                                    # 查找当前股票的概念信息
+                                                    for item in concepts:
+                                                        if item.get('f12') == symbol:  # 找到当前股票
+                                                            concept_list = item.get('f103', '')
+                                                            if concept_list and concept_list != '-':
+                                                                stock_info['概念板块'] = concept_list
+                                                                concept_found = True
+                                                                break
+                                        except Exception as e:
+                                            pass
+                                    
+                                    # 如果还是没找到，设为空
+                                    if not concept_found:
+                                        stock_info['概念板块'] = ''
+                                    
+                                    break
+                
+                except Exception as e:
+                    pass
+            
+            # 如果还是没有获取到，使用默认值
+            if not stock_info['概念板块']:
+                stock_info['概念板块'] = ''
+            if not stock_info['地区']:
+                stock_info['地区'] = ''
+                
+            return stock_info
             
         except Exception as e:
             print(f'获取{stock_code}行业概念信息出错：{e}')

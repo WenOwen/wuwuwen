@@ -4,6 +4,14 @@ AI股市预测系统 - 模型架构模块
 功能：实现多模型融合的股市预测系统
 """
 
+import os
+# 必须在导入TensorFlow之前设置环境变量
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 只显示错误
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # 关闭oneDNN提示
+os.environ['TF_DISABLE_MKL'] = '1'  # 禁用MKL优化提示
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'  # GPU内存增长
+# 注意：不设置CUDA_VISIBLE_DEVICES，保持GPU可用
+
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Tuple, Optional
@@ -11,13 +19,124 @@ import joblib
 import warnings
 warnings.filterwarnings('ignore')
 
+# 设置TensorFlow日志级别
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
 # 深度学习框架
 import tensorflow as tf
+# 设置TensorFlow完全静默运行
+tf.get_logger().setLevel('ERROR')
+tf.autograph.set_verbosity(0)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
+# 禁用TensorFlow的所有info和warning输出
+import absl.logging
+absl.logging.set_verbosity(absl.logging.ERROR)
+
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Conv1D, MaxPooling1D, Flatten, Attention, MultiHeadAttention, LayerNormalization
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, Callback
 from sklearn.preprocessing import StandardScaler, RobustScaler
+
+
+class SimplifiedProgressCallback(Callback):
+    """简化的训练进度回调 - 每轮次一行，避免跳动"""
+    
+    def __init__(self, model_name="模型", total_epochs=30):
+        super().__init__()
+        self.model_name = model_name
+        self.current_epoch = 0
+        self.total_epochs = total_epochs
+        self.last_val_acc = 0
+        self.best_val_acc = 0
+        
+    def on_train_begin(self, logs=None):
+        print(f"开始训练 {self.model_name}，总共 {self.total_epochs} 轮")
+        
+    def on_epoch_end(self, epoch, logs=None):
+        self.current_epoch = epoch + 1
+        loss = logs.get('loss', 0)
+        acc = logs.get('accuracy', 0)
+        val_loss = logs.get('val_loss', None)
+        val_acc = logs.get('val_accuracy', None)
+        
+        # 计算进度百分比
+        progress = int((self.current_epoch / self.total_epochs) * 20)  # 20个字符的进度条
+        progress_bar = '█' * progress + '░' * (20 - progress)
+        percentage = (self.current_epoch / self.total_epochs) * 100
+        
+        # 跟踪最佳验证准确率
+        if val_acc is not None:
+            if val_acc > self.best_val_acc:
+                self.best_val_acc = val_acc
+                improvement = "↑"
+            elif val_acc < self.last_val_acc:
+                improvement = "↓"
+            else:
+                improvement = "→"
+            self.last_val_acc = val_acc
+            
+            print(f"轮次 {self.current_epoch:2d}/{self.total_epochs} [{progress_bar}] {percentage:5.1f}% | "
+                  f"损失:{loss:.4f} 准确率:{acc:.4f} | 验证损失:{val_loss:.4f} 验证准确率:{val_acc:.4f} {improvement}")
+        else:
+            print(f"轮次 {self.current_epoch:2d}/{self.total_epochs} [{progress_bar}] {percentage:5.1f}% | "
+                  f"损失:{loss:.4f} 准确率:{acc:.4f}")
+    
+    def on_train_end(self, logs=None):
+        print(f"✅ {self.model_name}训练完成 (最佳验证准确率: {self.best_val_acc:.4f})")
+
+
+class LightGBMProgressCallback:
+    """LightGBM训练进度回调"""
+    def __init__(self, model_name="LightGBM", total_rounds=1000, update_frequency=50):
+        self.model_name = model_name
+        self.total_rounds = total_rounds
+        self.update_frequency = update_frequency
+        self.current_round = 0
+        self.best_score = float('inf')
+        self.no_improve_count = 0
+        self.start_time = None
+
+    def __call__(self, env):
+        """LightGBM回调函数"""
+        if self.start_time is None:
+            import time
+            self.start_time = time.time()
+            print(f"开始训练 {self.model_name}，预计最多 {self.total_rounds} 轮")
+        
+        self.current_round = env.iteration + 1
+        
+        # 每隔一定轮次显示进度
+        if self.current_round % self.update_frequency == 0 or self.current_round == 1:
+            progress = min(self.current_round / self.total_rounds, 1.0)
+            bar_length = 30
+            filled_length = int(bar_length * progress)
+            progress_bar = '█' * filled_length + '░' * (bar_length - filled_length)
+            percentage = progress * 100
+            
+            # 获取验证分数
+            valid_score = None
+            improvement = ""
+            if env.evaluation_result_list:
+                # 取第一个验证集的分数
+                valid_score = env.evaluation_result_list[0][2]
+                if valid_score < self.best_score:
+                    self.best_score = valid_score
+                    improvement = "⬆️"
+                    self.no_improve_count = 0
+                else:
+                    improvement = "→"
+                    self.no_improve_count += self.update_frequency
+            
+            if valid_score is not None:
+                print(f"轮次 {self.current_round:4d}/{self.total_rounds} [{progress_bar}] {percentage:5.1f}% | "
+                      f"验证分数: {valid_score:.6f} {improvement} | 最佳: {self.best_score:.6f}")
+            else:
+                print(f"轮次 {self.current_round:4d}/{self.total_rounds} [{progress_bar}] {percentage:5.1f}% | "
+                      f"训练中...")
+
 
 # 机器学习模型
 import xgboost as xgb
@@ -114,8 +233,9 @@ class LSTMModel(StockPredictionModel):
         
         # 训练回调
         callbacks = [
-            EarlyStopping(patience=15, restore_best_weights=True),
-            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7)
+            SimplifiedProgressCallback(self.model_name, epochs),
+            EarlyStopping(patience=15, restore_best_weights=True, verbose=0),
+            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7, verbose=0)
         ]
         
         # 训练模型
@@ -125,11 +245,10 @@ class LSTMModel(StockPredictionModel):
             epochs=epochs,
             batch_size=batch_size,
             callbacks=callbacks,
-            verbose=1
+            verbose=0  # 关闭默认输出，使用自定义回调
         )
         
         self.is_fitted = True
-        print(f"✅ {self.model_name}模型训练完成")
         return history
     
     def _preprocess_data(self, X, fit_scaler=False):
@@ -242,8 +361,9 @@ class TransformerModel(StockPredictionModel):
         
         # 训练回调
         callbacks = [
-            EarlyStopping(patience=15, restore_best_weights=True),
-            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7)
+            SimplifiedProgressCallback(self.model_name, epochs),
+            EarlyStopping(patience=15, restore_best_weights=True, verbose=0),
+            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7, verbose=0)
         ]
         
         # 训练模型
@@ -253,11 +373,10 @@ class TransformerModel(StockPredictionModel):
             epochs=epochs,
             batch_size=batch_size,
             callbacks=callbacks,
-            verbose=1
+            verbose=0  # 关闭默认输出，使用自定义回调
         )
         
         self.is_fitted = True
-        print(f"✅ {self.model_name}模型训练完成")
         return history
     
     def _preprocess_data(self, X, fit_scaler=False):
@@ -308,10 +427,11 @@ class LightGBMModel(StockPredictionModel):
             'subsample': 0.8,
             'colsample_bytree': 0.8,
             'random_state': 42,
-            'verbose': -1,
+            'verbose': -1,  # 保持静默，使用自定义进度显示
             **params
         }
         self.scaler = RobustScaler()
+        self.training_progress = None
         
     def fit(self, X_train, y_train, X_val=None, y_val=None, **kwargs):
         """训练LightGBM模型"""
@@ -349,19 +469,33 @@ class LightGBMModel(StockPredictionModel):
         # 训练模型
         self.model = lgb.LGBMClassifier(**self.params)
         
+        # 创建进度回调
+        progress_callback = LightGBMProgressCallback(
+            model_name=self.model_name,
+            total_rounds=self.params.get('n_estimators', 1000),
+            update_frequency=50
+        )
+        
         # LightGBM训练
         try:
+            callbacks = [progress_callback]
+            if eval_set:
+                callbacks.append(lgb.early_stopping(50, verbose=False))
+            
             self.model.fit(
                 X_train_scaled, y_train,
                 eval_set=eval_set,
-                callbacks=[lgb.early_stopping(50, verbose=False)] if eval_set else None
+                callbacks=callbacks
             )
         except Exception as e:
             print(f"  ⚠️ 早停训练失败: {e}, 尝试基本训练")
             # 简单训练方式（无早停）
             try:
                 self.model = lgb.LGBMClassifier(**self.params)
-                self.model.fit(X_train_scaled, y_train)
+                self.model.fit(
+                    X_train_scaled, y_train,
+                    callbacks=[progress_callback]
+                )
             except Exception as e2:
                 print(f"  ❌ 基本训练也失败: {e2}")
                 raise e2
@@ -467,8 +601,9 @@ class CNNLSTMModel(StockPredictionModel):
         
         # 训练回调
         callbacks = [
-            EarlyStopping(patience=15, restore_best_weights=True),
-            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7)
+            SimplifiedProgressCallback(self.model_name, epochs),
+            EarlyStopping(patience=15, restore_best_weights=True, verbose=0),
+            ReduceLROnPlateau(factor=0.5, patience=10, min_lr=1e-7, verbose=0)
         ]
         
         # 训练模型
@@ -478,11 +613,10 @@ class CNNLSTMModel(StockPredictionModel):
             epochs=epochs,
             batch_size=batch_size,
             callbacks=callbacks,
-            verbose=1
+            verbose=0  # 关闭默认输出，使用自定义回调
         )
         
         self.is_fitted = True
-        print(f"✅ {self.model_name}模型训练完成")
         return history
     
     def _preprocess_data(self, X, fit_scaler=False):
@@ -538,9 +672,11 @@ class EnsembleModel:
         }
         self.performance_history = []
         
-    def add_model(self, model: StockPredictionModel):
+    def add_model(self, model: StockPredictionModel, weight: float = None):
         """添加模型到集成"""
         self.models[model.model_name] = model
+        if weight is not None:
+            self.model_weights[model.model_name] = weight
         
     def fit(self, X_train, y_train, X_val=None, y_val=None, **kwargs):
         """训练所有模型"""
@@ -645,7 +781,7 @@ class EnsembleModel:
                     'probabilities': y_proba
                 }
                 
-                print(f"{model_name} 测试准确率: {accuracy:.4f}")
+                print(f"  {model_name}: 准确率 {accuracy:.4f}")
         
         # 集成模型性能
         ensemble_pred = self.predict(X_test)
@@ -658,11 +794,8 @@ class EnsembleModel:
             'probabilities': ensemble_proba
         }
         
-        print(f"集成模型 测试准确率: {ensemble_accuracy:.4f}")
-        
-        # 详细报告
-        print("\n集成模型分类报告:")
-        print(classification_report(y_test, ensemble_pred))
+        print(f"  集成模型: 准确率 {ensemble_accuracy:.4f}")
+        print(f"📈 最终性能: {ensemble_accuracy:.4f}")
         
         return results
     

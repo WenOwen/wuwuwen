@@ -30,7 +30,15 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # 导入原有基类
-from ai_models import StockPredictionModel, EnsembleModel
+# 导入处理 - 支持直接运行和模块导入
+try:
+    from .ai_models import StockPredictionModel, EnsembleModel
+except ImportError:
+    # 直接运行时的导入
+    import sys
+    import os
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from ai_models import StockPredictionModel, EnsembleModel
 
 
 class EnhancedLSTMModel(StockPredictionModel):

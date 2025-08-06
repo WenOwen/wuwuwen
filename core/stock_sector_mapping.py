@@ -15,8 +15,31 @@ class StockSectorMapping:
     负责管理股票代码与板块的映射关系
     """
     
-    def __init__(self, mapping_file: str = "stock_sector_data.json"):
-        self.mapping_file = mapping_file
+    def __init__(self, mapping_file: str = None):
+        # 优先使用新整合的真实板块数据
+        csv_files = [
+            "data/股票板块映射_训练用.csv",
+            "../data/股票板块映射_训练用.csv", 
+            "股票板块映射_训练用.csv",
+            "sector_data/股票板块映射_训练用.csv",
+            "../sector_data/股票板块映射_训练用.csv"
+        ]
+        
+        self.mapping_file = None
+        self.csv_mapping_file = None
+        
+        # 寻找CSV映射文件
+        for csv_file in csv_files:
+            if os.path.exists(csv_file):
+                self.csv_mapping_file = csv_file
+                print(f"✅ 发现真实板块数据: {csv_file}")
+                break
+        
+        # 如果没有CSV文件，使用传统JSON方式
+        if self.csv_mapping_file is None:
+            self.mapping_file = mapping_file or "stock_sector_data.json"
+            print(f"⚠️ 未找到CSV板块数据，使用传统方式: {self.mapping_file}")
+        
         self.stock_to_sector = {}
         self.sector_to_stocks = {}
         self.stock_to_id = {}
@@ -114,24 +137,101 @@ class StockSectorMapping:
     
     def _load_or_create_mapping(self):
         """加载或创建映射数据"""
-        if os.path.exists(self.mapping_file):
-            try:
-                with open(self.mapping_file, 'r', encoding='utf-8') as f:
-                    mapping_data = json.load(f)
-                print(f"✅ 加载股票板块映射文件: {self.mapping_file}")
-            except Exception as e:
-                print(f"⚠️ 加载映射文件失败: {e}，使用默认映射")
-                mapping_data = self._create_default_mapping()
+        
+        # 优先使用CSV数据
+        if self.csv_mapping_file and os.path.exists(self.csv_mapping_file):
+            mapping_data = self._load_csv_mapping()
+        # 回退到JSON数据
+        elif self.mapping_file and os.path.exists(self.mapping_file):
+            mapping_data = self._load_json_mapping()
         else:
-            print("📁 创建默认股票板块映射")
+            print("⚠️ 未找到任何映射文件，使用默认映射")
             mapping_data = self._create_default_mapping()
-            # 保存默认映射
-            self.save_mapping(mapping_data)
+            if self.mapping_file:
+                self.save_mapping(mapping_data)
         
         self._build_mappings(mapping_data)
     
+    def _load_csv_mapping(self) -> Dict:
+        """从CSV文件加载真实的板块映射数据"""
+        try:
+            df = pd.read_csv(self.csv_mapping_file, encoding='utf-8-sig')
+            print(f"✅ 加载新整合的板块数据: {self.csv_mapping_file}")
+            print(f"📊 板块映射统计: {len(df)}只股票, {df['industry'].nunique()}个行业, {df['primary_concept'].nunique()}个主要概念")
+            
+            mapping_data = {}
+            for _, row in df.iterrows():
+                stock_code = row['stock_code']
+                mapping_data[stock_code] = {
+                    'sector': row['industry'],  # 使用行业作为主要板块
+                    'sector_en': self._translate_sector_to_english(row['industry']),
+                    'name': row['stock_name'],
+                    'primary_concept': row['primary_concept'],
+                    'all_concepts': row['all_concepts'],
+                    'region': row['region']
+                }
+            
+            return mapping_data
+            
+        except Exception as e:
+            print(f"❌ 加载CSV映射文件失败: {str(e)}")
+            return self._create_default_mapping()
+    
+    def _load_json_mapping(self) -> Dict:
+        """从JSON文件加载映射数据"""
+        try:
+            with open(self.mapping_file, 'r', encoding='utf-8') as f:
+                mapping_data = json.load(f)
+            print(f"✅ 加载股票板块映射文件: {self.mapping_file}")
+            print(f"📊 映射统计: {len(mapping_data)}只股票, {len(set(item['sector'] for item in mapping_data.values()))}个板块")
+            return mapping_data
+        except Exception as e:
+            print(f"❌ 加载JSON映射文件失败: {str(e)}")
+            return self._create_default_mapping()
+    
+    def _translate_sector_to_english(self, chinese_sector: str) -> str:
+        """将中文板块名称翻译为英文"""
+        translation_map = {
+            '银行': 'banking',
+            '证券': 'securities', 
+            '保险': 'insurance',
+            '房地产': 'real_estate',
+            '食品饮料': 'food_beverage',
+            '医药生物': 'pharmaceutical',
+            '电子': 'electronics',
+            '计算机': 'computer',
+            '通信': 'communication',
+            '汽车': 'automobile',
+            '机械设备': 'machinery',
+            '电力设备': 'power_equipment',
+            '新能源': 'new_energy',
+            '化工': 'chemical',
+            '建筑材料': 'construction_materials',
+            '钢铁': 'steel',
+            '有色金属': 'non_ferrous_metals',
+            '煤炭': 'coal',
+            '石油石化': 'petrochemical',
+            '交通运输': 'transportation',
+            '公用事业': 'utilities',
+            '商业贸易': 'commercial_trade',
+            '休闲服务': 'leisure_services',
+            '纺织服装': 'textile_clothing',
+            '轻工制造': 'light_manufacturing',
+            '农林牧渔': 'agriculture',
+            '综合': 'diversified',
+            '国防军工': 'defense',
+            '传媒': 'media',
+            '家用电器': 'home_appliances',
+            '建筑装饰': 'construction_decoration'
+        }
+        
+        return translation_map.get(chinese_sector, 'others')
+    
     def _build_mappings(self, mapping_data: Dict):
         """构建各种映射关系"""
+        # 保存原始映射数据
+        self.original_mapping_data = mapping_data
+        
         # 构建股票到板块映射
         for stock_code, info in mapping_data.items():
             self.stock_to_sector[stock_code] = info["sector"]
@@ -161,11 +261,17 @@ class StockSectorMapping:
     def get_stock_info(self, stock_code: str) -> Dict:
         """获取股票信息"""
         if stock_code in self.stock_to_sector:
+            # 从原始映射数据中获取完整信息
+            full_info = self.original_mapping_data.get(stock_code, {})
             return {
                 "stock_code": stock_code,
                 "sector": self.stock_to_sector[stock_code],
                 "stock_id": self.stock_to_id[stock_code],
-                "sector_id": self.sector_to_id[self.stock_to_sector[stock_code]]
+                "sector_id": self.sector_to_id[self.stock_to_sector[stock_code]],
+                "name": full_info.get("name", f"股票{stock_code}"),
+                "primary_concept": full_info.get("primary_concept", ""),
+                "all_concepts": full_info.get("all_concepts", ""),
+                "region": full_info.get("region", "")
             }
         else:
             # 自动推断
