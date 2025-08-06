@@ -1,0 +1,3 @@
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Requirement already satisfied: openpyxl in /home/wangkai/anaconda3/envs/quant/lib/python3.9/site-packages (3.1.5)
+Requirement already satisfied: et-xmlfile in /home/wangkai/anaconda3/envs/quant/lib/python3.9/site-packages (from openpyxl) (2.0.0)

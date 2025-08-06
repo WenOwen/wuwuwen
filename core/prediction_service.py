@@ -276,7 +276,8 @@ class PredictionService:
         return df.tail(days).reset_index(drop=True)
     
     def predict_single_stock(self, stock_code: str, prediction_days: int = 1,
-                           include_analysis: bool = True) -> PredictionResponse:
+                           include_analysis: bool = True, 
+                           prediction_threshold: float = 0.6) -> PredictionResponse:
         """
         单只股票预测
         
@@ -284,6 +285,7 @@ class PredictionService:
             stock_code: 股票代码
             prediction_days: 预测天数
             include_analysis: 是否包含分析信息
+            prediction_threshold: 预测阈值（默认0.6，大于此值预测上涨）
             
         Returns:
             预测结果
@@ -337,13 +339,35 @@ class PredictionService:
             
             # 预测
             prediction = model.predict(X_pred)[0]
-            probability = model.predict_proba(X_pred)[0, 1]  # 上涨概率
+            raw_probability = model.predict_proba(X_pred)[0, 1]  # 上涨概率
             
-            # 置信度评估
-            confidence = self._assess_confidence(probability)
+            # 调试信息：显示各个子模型的预测
+            if hasattr(model, 'models') and model.models:
+                logger.info("🔍 各子模型预测详情:")
+                for sub_model_name, sub_model in model.models.items():
+                    if hasattr(sub_model, 'is_fitted') and sub_model.is_fitted:
+                        try:
+                            sub_pred = sub_model.predict(X_pred)[0]
+                            sub_prob = sub_model.predict_proba(X_pred)[0, 1]
+                            weight = model.model_weights.get(sub_model_name, 0)
+                            logger.info(f"  {sub_model_name}: 预测={sub_pred}, 概率={sub_prob:.3f}, 权重={weight:.3f}")
+                        except Exception as e:
+                            logger.warning(f"  {sub_model_name}: 预测失败 - {str(e)}")
+                logger.info(f"🎯 集成结果: 预测={prediction}, 原始概率={raw_probability:.3f}")
             
-            # 预测方向
-            predicted_direction = "上涨" if prediction == 1 else "下跌"
+            # 基于用户设定的阈值判断预测方向
+            if raw_probability > prediction_threshold:
+                prediction = 1
+                predicted_direction = "上涨"
+            else:
+                prediction = 0
+                predicted_direction = "下跌"
+            
+            # 直接使用原始概率，不做转换
+            probability = raw_probability
+            
+            # 置信度评估（基于概率距离阈值的远近）
+            confidence = self._assess_confidence(probability, prediction_threshold)
             
             # 分析信息
             analysis = {}
@@ -388,15 +412,22 @@ class PredictionService:
             # 对于streamlit使用，抛出普通异常而不是HTTPException
             raise ValueError(f"预测失败: {str(e)}")
     
-    def _assess_confidence(self, probability: float) -> str:
-        """评估预测置信度"""
-        abs_prob = abs(probability - 0.5)
+    def _assess_confidence(self, probability: float, prediction_threshold: float = 0.6) -> str:
+        """评估预测置信度
         
-        if abs_prob >= 0.3:  # 概率 >= 0.8 或 <= 0.2
+        Args:
+            probability: 预测概率
+            prediction_threshold: 预测阈值（用于判断上涨/下跌的分界点）
+        """
+        # 计算概率距离预测阈值的远近
+        distance_from_threshold = abs(probability - prediction_threshold)
+        
+        # 基于距离阈值的远近评估置信度
+        if distance_from_threshold >= 0.2:  # 距离阈值20%以上
             return "high"
-        elif abs_prob >= 0.1:  # 概率 >= 0.6 或 <= 0.4
+        elif distance_from_threshold >= 0.1:  # 距离阈值10%-20%
             return "medium"
-        else:
+        else:  # 距离阈值10%以内
             return "low"
     
     def _generate_analysis(self, df_features: pd.DataFrame, 
@@ -597,7 +628,8 @@ class PredictionService:
                 result = self.predict_single_stock(
                     stock_code=stock_code,
                     prediction_days=prediction_days,
-                    include_analysis=False  # 批量预测时不包含详细分析
+                    include_analysis=False,  # 批量预测时不包含详细分析
+                    prediction_threshold=0.6  # 使用默认阈值
                 )
                 results.append(result)
                 
@@ -643,7 +675,8 @@ async def predict_stock(request: PredictionRequest):
     return prediction_service.predict_single_stock(
         stock_code=request.stock_code,
         prediction_days=request.prediction_days,
-        include_analysis=request.include_analysis
+        include_analysis=request.include_analysis,
+        prediction_threshold=0.6  # 使用默认阈值
     )
 
 
