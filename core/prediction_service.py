@@ -78,7 +78,7 @@ class PredictionService:
     """
     
     def __init__(self, model_dir: str = "models", 
-                 data_dir: str = "datas_em",
+                 data_dir: str = "data/datas_em",
                  redis_host: str = "localhost",
                  redis_port: int = 6379):
         self.model_dir = model_dir
@@ -131,14 +131,24 @@ class PredictionService:
                     training_info = joblib.load(info_path)
                     prediction_days = training_info['prediction_days']
                     
+                    # 从训练信息中获取正确的参数
+                    # 根据错误信息，模型期望的是(None, 30, 170)的输入形状
+                    sequence_length = training_info.get('sequence_length', 30)  # 改为默认30
+                    n_features = len(training_info['feature_names'])
+                    
+                    logger.info(f"创建模型: sequence_length={sequence_length}, n_features={n_features}")
+                    
                     # 创建模型实例
                     model = create_ensemble_model(
-                        sequence_length=60,
-                        n_features=len(training_info['feature_names'])
+                        sequence_length=sequence_length,
+                        n_features=n_features
                     )
                     
                     # 加载各子模型
                     self._load_individual_models(model, folder_path)
+                    
+                    # 确保training_info中包含sequence_length
+                    training_info['sequence_length'] = sequence_length
                     
                     self.models[prediction_days] = model
                     self.model_metadata[prediction_days] = training_info
@@ -152,9 +162,104 @@ class PredictionService:
     
     def _load_individual_models(self, ensemble_model: EnsembleModel, model_path: str):
         """加载集成模型中的各个子模型"""
-        # 这里简化处理，实际需要根据具体保存格式加载
-        # 由于模型保存和加载比较复杂，这里提供框架结构
-        pass
+        try:
+            import tensorflow as tf
+            import lightgbm as lgb
+            from sklearn.preprocessing import StandardScaler
+            
+            # 加载模型权重
+            weights_path = os.path.join(model_path, 'model_weights.pkl')
+            if os.path.exists(weights_path):
+                ensemble_model.model_weights = joblib.load(weights_path)
+            
+            # 加载各个子模型
+            model_files = {
+                'LSTM': ('LSTM_model.h5', 'LSTM_scaler.pkl'),
+                'CNN-LSTM': ('CNN-LSTM_model.h5', 'CNN-LSTM_scaler.pkl'),
+                'Transformer': ('Transformer_model.h5', 'Transformer_scaler.pkl'),
+                'LightGBM': ('LightGBM_model.pkl', 'LightGBM_scaler.pkl')
+            }
+            
+            for model_name, (model_file, scaler_file) in model_files.items():
+                model_file_path = os.path.join(model_path, model_file)
+                scaler_file_path = os.path.join(model_path, scaler_file)
+                
+                if os.path.exists(model_file_path) and model_name in ensemble_model.models:
+                    try:
+                        # 加载模型
+                        if model_name == 'LightGBM':
+                            loaded_model = joblib.load(model_file_path)
+                        else:
+                            loaded_model = tf.keras.models.load_model(model_file_path)
+                        
+                        # 加载对应的scaler
+                        if os.path.exists(scaler_file_path):
+                            scaler = joblib.load(scaler_file_path)
+                            ensemble_model.models[model_name].scaler = scaler
+                        
+                        # 设置模型为已训练状态
+                        ensemble_model.models[model_name].model = loaded_model
+                        ensemble_model.models[model_name].is_fitted = True
+                        
+                        logger.info(f"成功加载子模型: {model_name}")
+                        
+                    except Exception as e:
+                        logger.warning(f"加载子模型 {model_name} 失败: {str(e)}")
+                        continue
+            
+            # 检查是否至少有一个模型加载成功
+            loaded_models = sum(1 for model in ensemble_model.models.values() if model.is_fitted)
+            if loaded_models == 0:
+                logger.warning("没有任何子模型加载成功，将使用规则预测")
+                # 设置一个简单的规则模型作为后备
+                self._setup_fallback_model(ensemble_model)
+            else:
+                logger.info(f"成功加载 {loaded_models} 个子模型")
+                
+        except Exception as e:
+            logger.error(f"加载模型失败: {str(e)}")
+            # 设置后备模型
+            self._setup_fallback_model(ensemble_model)
+    
+    def _setup_fallback_model(self, ensemble_model: EnsembleModel):
+        """设置后备模型（简单规则模型）"""
+        try:
+            # 创建一个简单的规则预测模型
+            class SimpleFallbackModel:
+                def __init__(self):
+                    self.is_fitted = True
+                
+                def predict(self, X):
+                    # 简单规则：基于最后几天的价格趋势
+                    if len(X) == 0:
+                        return np.array([1])  # 默认预测上涨
+                    
+                    # 计算简单的趋势
+                    recent_prices = X[0, -5:, 0] if X.shape[1] >= 5 else X[0, :, 0]
+                    if len(recent_prices) >= 2:
+                        trend = (recent_prices[-1] - recent_prices[0]) / recent_prices[0]
+                        return np.array([1 if trend > 0 else 0])
+                    else:
+                        return np.array([1])
+                
+                def predict_proba(self, X):
+                    pred = self.predict(X)
+                    prob = 0.6 if pred[0] == 1 else 0.4
+                    return np.array([[1-prob, prob]])
+            
+            # 清空现有模型，只使用后备模型
+            ensemble_model.models.clear()
+            ensemble_model.model_weights.clear()
+            
+            # 设置后备模型
+            ensemble_model.models['Fallback'] = SimpleFallbackModel()
+            ensemble_model.model_weights['Fallback'] = 1.0
+            
+            logger.info("已设置简单规则后备模型")
+            
+        except Exception as e:
+            logger.error(f"设置后备模型失败: {str(e)}")
+            raise ValueError("无法初始化任何预测模型")
     
     def get_latest_stock_data(self, stock_code: str, days: int = 100) -> pd.DataFrame:
         """获取最新股票数据"""
@@ -201,13 +306,18 @@ class PredictionService:
             current_price = df['收盘价'].iloc[-1]
             
             # 特征工程
-            df_features = self.feature_engineer.create_all_features(df)
+            df_features = self.feature_engineer.create_all_features(df, stock_code)
+            
+            # 获取模型的sequence_length
+            model = self.models[prediction_days]
+            model_metadata = self.model_metadata.get(prediction_days, {})
+            sequence_length = model_metadata.get('sequence_length', 30)  # 改为默认30
             
             # 准备预测数据
-            X, _, feature_names = self.feature_engineer.prepare_model_data(
+            X, _, feature_names, _ = self.feature_engineer.prepare_model_data(
                 df_features, 
                 prediction_days=prediction_days,
-                lookback_window=60
+                lookback_window=sequence_length
             )
             
             if len(X) == 0:
@@ -215,6 +325,12 @@ class PredictionService:
             
             # 使用最后一个样本进行预测
             X_pred = X[-1].reshape(1, *X[-1].shape)
+            
+            # 调试信息：检查实际的数据形状
+            logger.info(f"调试信息 - sequence_length: {sequence_length}")
+            logger.info(f"调试信息 - X.shape: {X.shape}")
+            logger.info(f"调试信息 - X_pred.shape: {X_pred.shape}")
+            logger.info(f"调试信息 - 期望形状: (1, {sequence_length}, {len(feature_names)})")
             
             # 获取模型
             model = self.models[prediction_days]
@@ -269,7 +385,8 @@ class PredictionService:
             
         except Exception as e:
             logger.error(f"预测股票 {stock_code} 失败: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            # 对于streamlit使用，抛出普通异常而不是HTTPException
+            raise ValueError(f"预测失败: {str(e)}")
     
     def _assess_confidence(self, probability: float) -> str:
         """评估预测置信度"""
@@ -355,7 +472,7 @@ class PredictionService:
         try:
             # 获取股票数据
             df = self.get_latest_stock_data(stock_code)
-            df_features = self.feature_engineer.create_all_features(df)
+            df_features = self.feature_engineer.create_all_features(df, stock_code)
             
             latest_data = df_features.iloc[-1]
             current_price = df['收盘价'].iloc[-1]
@@ -390,7 +507,7 @@ class PredictionService:
             
         except Exception as e:
             logger.error(f"风险评估失败 {stock_code}: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+            raise ValueError(f"风险评估失败: {str(e)}")
     
     def _forecast_volatility(self, df_features: pd.DataFrame) -> float:
         """预测未来波动率"""

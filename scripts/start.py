@@ -59,7 +59,7 @@ def check_dependencies():
 def check_directories():
     """检查并创建必要的目录"""
     directories = [
-        'datas_em',
+        'data/datas_em',
         'models', 
         'logs',
         'stockcode_list',
@@ -79,11 +79,11 @@ def check_directories():
 
 def check_data_files():
     """检查数据文件"""
-    data_dir = Path('datas_em')
+    data_dir = Path('data/datas_em')
     csv_files = list(data_dir.glob('*.csv'))
     
     if not csv_files:
-        logger.warning("datas_em目录中没有股票数据文件")
+        logger.warning("data/datas_em目录中没有股票数据文件")
         logger.info("请先运行数据获取脚本: python 2.1获取全数据（东财）.py")
         return False
     
@@ -167,7 +167,7 @@ def start_api_service():
         # 启动FastAPI服务
         cmd = [
             sys.executable, '-m', 'uvicorn',
-            'prediction_service:app',
+            'core.prediction_service:app',
             '--host', '0.0.0.0',
             '--port', '8000',
             '--reload'
@@ -205,7 +205,7 @@ def start_web_interface():
     try:
         cmd = [
             sys.executable, '-m', 'streamlit', 'run',
-            'streamlit_app.py',
+            'scripts/streamlit_app.py',
             '--server.port', '8501',
             '--server.address', '0.0.0.0'
         ]

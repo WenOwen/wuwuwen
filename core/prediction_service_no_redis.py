@@ -115,7 +115,7 @@ class PredictionService:
     """预测服务类（无Redis版本）"""
     
     def __init__(self, model_dir: str = "models", 
-                 data_dir: str = "datas_em"):
+                 data_dir: str = "data/datas_em"):
         self.model_dir = model_dir
         self.data_dir = data_dir
         self.feature_engineer = FeatureEngineering()
@@ -215,10 +215,10 @@ class PredictionService:
             current_price = df['收盘价'].iloc[-1]
             
             # 特征工程
-            df_features = self.feature_engineer.create_all_features(df)
+            df_features = self.feature_engineer.create_all_features(df, stock_code)
             
             # 准备预测数据
-            X, _, feature_names = self.feature_engineer.prepare_model_data(
+            X, _, feature_names, _ = self.feature_engineer.prepare_model_data(
                 df_features, 
                 prediction_days=prediction_days,
                 lookback_window=60
@@ -295,7 +295,7 @@ class PredictionService:
             current_price = df['收盘价'].iloc[-1]
             
             # 特征工程
-            df_features = self.feature_engineer.create_all_features(df)
+            df_features = self.feature_engineer.create_all_features(df, stock_code)
             latest = df_features.iloc[-1]
             
             # 简单规则预测

@@ -20,9 +20,9 @@ import sys
 sys.path.append('.')
 
 try:
-    from prediction_service import PredictionService
-    from performance_monitor import PerformanceMonitor
-    from feature_engineering import FeatureEngineering
+    from core.prediction_service import PredictionService
+    from core.performance_monitor import PerformanceMonitor
+    from core.feature_engineering import FeatureEngineering
 except ImportError as e:
     st.error(f"导入模块失败: {e}")
     st.stop()
@@ -89,13 +89,153 @@ def load_stock_list():
         return ['sh600519', 'sz000001', 'sz000002']
 
 
+@st.cache_data
+def get_available_models():
+    """获取可用的模型列表"""
+    model_info = {}
+    models_dir = "models"
+    
+    if not os.path.exists(models_dir):
+        return {}
+    
+    try:
+        model_folders = [f for f in os.listdir(models_dir) 
+                        if os.path.isdir(os.path.join(models_dir, f))]
+        
+        for folder in model_folders:
+            folder_path = os.path.join(models_dir, folder)
+            info_path = os.path.join(folder_path, 'training_info.pkl')
+            
+            if os.path.exists(info_path):
+                try:
+                    import joblib
+                    training_info = joblib.load(info_path)
+                    
+                    # 格式化模型显示名称
+                    prediction_days = training_info.get('prediction_days', 1)
+                    train_date = folder.split('_')[-2] if '_' in folder else 'unknown'
+                    accuracy = training_info.get('accuracy', 0)
+                    
+                    if accuracy > 0:
+                        display_name = f"{prediction_days}天预测模型 (训练日期: {train_date}, 准确率: {accuracy:.2%})"
+                    else:
+                        display_name = f"{prediction_days}天预测模型 (训练日期: {train_date})"
+                    
+                    model_info[display_name] = {
+                        'folder': folder,
+                        'prediction_days': prediction_days,
+                        'training_info': training_info,
+                        'accuracy': accuracy
+                    }
+                    
+                except Exception as e:
+                    st.warning(f"加载模型信息失败 {folder}: {e}")
+                    continue
+        
+        return model_info
+        
+    except Exception as e:
+        st.error(f"读取模型目录失败: {e}")
+        return {}
+
+
+def load_specific_model(prediction_service, model_folder, prediction_days):
+    """加载指定的模型"""
+    try:
+        import joblib
+        from core.ai_models import create_ensemble_model
+        
+        folder_path = os.path.join("models", model_folder)
+        
+        # 加载训练信息
+        info_path = os.path.join(folder_path, 'training_info.pkl')
+        if not os.path.exists(info_path):
+            st.error(f"❌ 模型信息文件不存在: {info_path}")
+            return False
+            
+        training_info = joblib.load(info_path)
+        
+        # 从训练信息中获取正确的参数
+        # 根据错误信息，模型期望的是(None, 30, 170)的输入形状
+        sequence_length = training_info.get('sequence_length', 30)  # 改为默认30
+        n_features = len(training_info['feature_names'])
+        
+        st.info(f"📐 模型参数: sequence_length={sequence_length}, n_features={n_features}")
+        
+        # 创建模型实例  
+        model = create_ensemble_model(
+            sequence_length=sequence_length,
+            n_features=n_features
+        )
+        
+        # 调用预测服务的模型加载方法
+        prediction_service._load_individual_models(model, folder_path)
+        
+        # 检查模型是否有可用的子模型
+        fitted_models = [name for name, m in model.models.items() if getattr(m, 'is_fitted', False)]
+        
+        if not fitted_models:
+            st.warning("⚠️ AI模型加载失败，启用后备模型")
+            prediction_service._setup_fallback_model(model)
+            fitted_models = [name for name, m in model.models.items() if getattr(m, 'is_fitted', False)]
+        
+        st.info(f"✅ 已加载模型: {model_folder}")
+        st.info(f"📊 可用子模型: {', '.join(fitted_models)}")
+        
+        # 确保training_info中包含sequence_length
+        training_info['sequence_length'] = sequence_length
+        
+        # 更新预测服务中的模型
+        prediction_service.models[prediction_days] = model
+        prediction_service.model_metadata[prediction_days] = training_info
+        
+        return True
+        
+    except Exception as e:
+        st.error(f"❌ 模型加载失败: {str(e)}")
+        # 尝试设置后备模型
+        try:
+            # 创建一个新的简单模型
+            from core.ai_models import EnsembleModel
+            fallback_model = EnsembleModel()
+            prediction_service._setup_fallback_model(fallback_model)
+            
+            # 确保后备模型也使用正确的sequence_length
+            training_info['sequence_length'] = 30  # 后备模型使用30
+            
+            prediction_service.models[prediction_days] = fallback_model
+            prediction_service.model_metadata[prediction_days] = training_info
+            
+            st.warning("⚠️ 已启用后备模型")
+            st.info("📊 可用子模型: Fallback")
+            return True
+            
+        except Exception as fallback_error:
+            st.error(f"❌ 后备模型设置失败: {str(fallback_error)}")
+            import traceback
+            st.code(traceback.format_exc())
+            return False
+
+
 @st.cache_resource
 def get_prediction_service():
     """获取预测服务实例"""
     try:
+        # 清除可能的模块缓存
+        import importlib
+        import core.prediction_service
+        import core.feature_engineering
+        import core.ai_models
+        importlib.reload(core.ai_models)
+        importlib.reload(core.feature_engineering)
+        importlib.reload(core.prediction_service)
+        
+        from core.prediction_service import PredictionService
         return PredictionService()
     except Exception as e:
         st.error(f"初始化预测服务失败: {e}")
+        import traceback
+        st.code(traceback.format_exc())
         return None
 
 
@@ -121,7 +261,7 @@ def main():
     # 页面选择
     page = st.sidebar.selectbox(
         "选择功能模块",
-        ["📈 股票预测", "📊 性能监控", "🎯 批量预测", "⚠️ 风险评估", "📋 预测历史", "⚙️ 系统设置"]
+        ["📈 股票预测", "📊 性能监控", "🎯 批量预测", "⚠️ 风险评估", "📋 预测历史", "🤖 模型管理", "⚙️ 系统设置"]
     )
     
     # 根据选择显示对应页面
@@ -135,6 +275,8 @@ def main():
         show_risk_assessment_page()
     elif page == "📋 预测历史":
         show_prediction_history_page()
+    elif page == "🤖 模型管理":
+        show_model_management_page()
     elif page == "⚙️ 系统设置":
         show_system_settings_page()
 
@@ -150,7 +292,7 @@ def show_stock_prediction_page():
         return
     
     # 股票选择区域
-    col1, col2, col3 = st.columns([2, 1, 1])
+    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
     
     with col1:
         stock_list = load_stock_list()
@@ -170,6 +312,25 @@ def show_stock_prediction_page():
         )
     
     with col3:
+        # 模型选择
+        available_models = get_available_models()
+        if available_models:
+            selected_model = st.selectbox(
+                "选择模型",
+                list(available_models.keys()),
+                index=0,
+                help="选择要使用的预测模型"
+            )
+            
+            # 显示选定模型信息
+            if selected_model:
+                model_info = available_models[selected_model]
+                st.info(f"📊 模型: {model_info['folder']}")
+        else:
+            st.warning("⚠️ 没有可用的模型")
+            selected_model = None
+    
+    with col4:
         include_analysis = st.checkbox(
             "包含详细分析",
             value=True,
@@ -178,8 +339,47 @@ def show_stock_prediction_page():
     
     # 预测按钮
     if st.button("🔮 开始预测", type="primary"):
+        # 清除缓存以确保使用最新的模型
+        st.cache_resource.clear()
+        
+        if not available_models:
+            st.error("❌ 没有可用的模型，请先训练模型")
+            return
+            
+        if selected_model is None:
+            st.error("❌ 请选择一个模型")
+            return
+            
         with st.spinner("正在进行AI预测分析..."):
             try:
+                # 获取选定的模型信息
+                model_info = available_models[selected_model]
+                
+                # 确保预测天数与模型匹配
+                model_prediction_days = model_info['prediction_days']
+                if prediction_days != model_prediction_days:
+                    st.warning(f"⚠️ 选定模型支持 {model_prediction_days} 天预测，将使用该模型进行预测")
+                    prediction_days = model_prediction_days
+                
+                # 动态加载选定的模型
+                with st.spinner("正在加载模型..."):
+                    success = load_specific_model(prediction_service, model_info['folder'], model_prediction_days)
+                
+                if not success:
+                    st.error("❌ 模型加载失败")
+                    st.info("💡 系统将尝试使用后备预测方法")
+                    # 确保有后备模型
+                    if model_prediction_days not in prediction_service.models:
+                        st.error("❌ 无法初始化任何预测模型")
+                        return
+                
+                # 验证模型是否可用
+                if model_prediction_days not in prediction_service.models:
+                    st.error("❌ 预测模型未正确加载")
+                    return
+                
+                st.success("✅ 模型加载完成，开始预测...")
+                
                 # 执行预测
                 result = prediction_service.predict_single_stock(
                     stock_code=selected_stock,
@@ -191,7 +391,11 @@ def show_stock_prediction_page():
                 show_prediction_result(result)
                 
             except Exception as e:
+                import traceback
+                error_details = traceback.format_exc()
                 st.error(f"预测失败: {str(e)}")
+                with st.expander("🔍 查看详细错误信息"):
+                    st.code(error_details)
     
     # 显示股票基本信息
     if selected_stock:
@@ -254,7 +458,13 @@ def show_prediction_result(result):
                 for indicator, data in tech_indicators.items():
                     if isinstance(data, dict):
                         signal_emoji = "🟢" if data.get('signal') in ['bullish', 'overbought'] else "🔴" if data.get('signal') in ['bearish', 'oversold'] else "🟡"
-                        st.write(f"{signal_emoji} **{indicator}**: {data.get('signal', 'N/A')} (值: {data.get('value', 'N/A'):.2f})")
+                        value = data.get('value', 'N/A')
+                        # 安全格式化数值
+                        if isinstance(value, (int, float)):
+                            value_str = f"{value:.2f}"
+                        else:
+                            value_str = str(value)
+                        st.write(f"{signal_emoji} **{indicator}**: {data.get('signal', 'N/A')} (值: {value_str})")
             
             # 趋势分析
             if 'trend_analysis' in result.analysis:
@@ -290,7 +500,61 @@ def show_prediction_result(result):
 def show_stock_basic_info(stock_code, prediction_service):
     """显示股票基本信息"""
     try:
-        st.subheader(f"📊 {stock_code} 基本信息")
+        # 获取股票详细信息
+        sector_mapping = prediction_service.feature_engineer.sector_mapping
+        stock_info = sector_mapping.get_stock_info(stock_code)
+        
+        st.subheader(f"📊 {stock_info.get('name', stock_code)} ({stock_code}) 基本信息")
+        
+        # 显示公司基本信息
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>🏢 公司信息</h4>
+                <p><strong>股票名称:</strong> {stock_info.get('name', 'N/A')}</p>
+                <p><strong>股票代码:</strong> {stock_code}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>🏭 行业板块</h4>
+                <p><strong>所属行业:</strong> {stock_info.get('sector', 'N/A')}</p>
+                <p><strong>板块ID:</strong> {stock_info.get('sector_id', 'N/A')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>💡 题材概念</h4>
+                <p><strong>主要概念:</strong> {stock_info.get('primary_concept', 'N/A')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h4>📍 地区信息</h4>
+                <p><strong>所在地区:</strong> {stock_info.get('region', 'N/A')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # 显示所有概念（如果有）
+        if stock_info.get('all_concepts'):
+            st.markdown("**🎯 所有题材概念:**")
+            concepts = stock_info.get('all_concepts', '').split(',')
+            if len(concepts) > 1:
+                concept_cols = st.columns(min(len(concepts), 4))
+                for i, concept in enumerate(concepts[:8]):  # 最多显示8个概念
+                    if concept.strip():
+                        with concept_cols[i % 4]:
+                            st.markdown(f"`{concept.strip()}`")
+            else:
+                st.write(stock_info.get('all_concepts', 'N/A'))
         
         # 获取最新数据
         df = prediction_service.get_latest_stock_data(stock_code, days=30)
@@ -303,8 +567,8 @@ def show_stock_basic_info(stock_code, prediction_service):
             
             with col1:
                 change = latest['涨跌幅']
-                color = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
-                st.metric("涨跌幅", f"{change:.2f}%", color=color)
+                delta_color = "normal" if change > 0 else "inverse" if change < 0 else "off"
+                st.metric("涨跌幅", f"{change:.2f}%", delta=f"{change:+.2f}%")
             
             with col2:
                 st.metric("成交量", f"{latest['成交量']:.0f}")
@@ -760,6 +1024,123 @@ def show_prediction_history_page():
         st.error(f"加载预测历史失败: {str(e)}")
 
 
+def show_model_management_page():
+    """模型管理页面"""
+    st.header("🤖 AI模型管理")
+    
+    prediction_service = get_prediction_service()
+    if prediction_service is None:
+        st.error("预测服务未初始化")
+        return
+    
+    # 获取可用模型
+    available_models = get_available_models()
+    
+    if not available_models:
+        st.warning("⚠️ 没有找到可用的模型")
+        st.info("请先运行训练脚本来训练模型")
+        return
+    
+    st.subheader("📋 已训练模型列表")
+    
+    # 创建模型信息表格
+    model_data = []
+    for display_name, info in available_models.items():
+        model_data.append({
+            '模型名称': display_name,
+            '预测天数': f"{info['prediction_days']}天",
+            '训练日期': info['folder'].split('_')[-2] if '_' in info['folder'] else '未知',
+            '准确率': f"{info['accuracy']:.2%}" if info['accuracy'] > 0 else '未知',
+            '文件夹': info['folder']
+        })
+    
+    model_df = pd.DataFrame(model_data)
+    st.dataframe(model_df, use_container_width=True)
+    
+    # 模型操作区域
+    st.subheader("🔧 模型操作")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        selected_model_for_action = st.selectbox(
+            "选择要操作的模型",
+            list(available_models.keys()),
+            help="选择要进行操作的模型"
+        )
+    
+    with col2:
+        if st.button("🔄 重新加载模型"):
+            if selected_model_for_action:
+                model_info = available_models[selected_model_for_action]
+                success = load_specific_model(
+                    prediction_service, 
+                    model_info['folder'], 
+                    model_info['prediction_days']
+                )
+                if success:
+                    st.success(f"✅ 模型 {selected_model_for_action} 重新加载成功")
+                else:
+                    st.error(f"❌ 模型 {selected_model_for_action} 重新加载失败")
+    
+    with col3:
+        if st.button("📊 查看模型详情"):
+            if selected_model_for_action:
+                model_info = available_models[selected_model_for_action]
+                show_model_details(model_info)
+    
+    # 训练新模型
+    st.subheader("🎯 训练新模型")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        new_model_days = st.selectbox("新模型预测天数", [1, 3, 5], help="选择新模型的预测天数")
+    
+    with col2:
+        if st.button("🚀 开始训练", type="primary"):
+            st.info("训练功能需要在后台执行，请使用命令行运行训练脚本")
+            st.code("python core/training_pipeline.py", language="bash")
+
+
+def show_model_details(model_info):
+    """显示模型详细信息"""
+    st.subheader(f"📊 模型详情: {model_info['folder']}")
+    
+    training_info = model_info['training_info']
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**📈 基本信息**")
+        st.write(f"🎯 预测天数: {model_info['prediction_days']}天")
+        st.write(f"📊 准确率: {model_info['accuracy']:.2%}")
+        st.write(f"📁 文件夹: {model_info['folder']}")
+        
+        if 'feature_names' in training_info:
+            st.write(f"🔧 特征数量: {len(training_info['feature_names'])}")
+    
+    with col2:
+        st.markdown("**⚙️ 训练配置**")
+        for key, value in training_info.items():
+            if key not in ['feature_names', 'feature_info']:
+                st.write(f"• {key}: {value}")
+    
+    # 特征列表
+    if 'feature_names' in training_info:
+        st.markdown("**🛠️ 使用的特征**")
+        feature_names = training_info['feature_names']
+        
+        # 分列显示特征
+        cols = st.columns(3)
+        for i, feature in enumerate(feature_names[:30]):  # 只显示前30个特征
+            with cols[i % 3]:
+                st.write(f"• {feature}")
+        
+        if len(feature_names) > 30:
+            st.write(f"... 还有 {len(feature_names) - 30} 个特征")
+
+
 def show_system_settings_page():
     """系统设置页面"""
     st.header("⚙️ 系统设置")
@@ -812,7 +1193,7 @@ def show_system_settings_page():
         "系统版本": "v1.0.0",
         "Python版本": f"{sys.version.split()[0]}",
         "启动时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "数据目录": os.path.abspath("datas_em"),
+        "数据目录": os.path.abspath("data/datas_em"),
         "模型目录": os.path.abspath("models")
     }
     

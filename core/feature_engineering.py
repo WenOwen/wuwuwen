@@ -511,7 +511,7 @@ class FeatureEngineering:
     
     def prepare_model_data(self, df: pd.DataFrame, 
                           prediction_days: int = 1,
-                          lookback_window: int = 60) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+                          lookback_window: int = 60) -> Tuple[np.ndarray, np.ndarray, List[str], dict]:
         """
         准备模型训练数据
         
