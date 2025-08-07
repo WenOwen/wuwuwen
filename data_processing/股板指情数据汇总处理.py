@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-改进的数据预处理模块
-每只股票只使用其所属行业的特征，避免特征维度爆炸
+数据预处理模块
 """
 
 import os
@@ -135,8 +134,9 @@ class ImprovedDataProcessor:
         stock_data_dict = {}
         
         for i, file_path in enumerate(stock_files):
-            if i % 50 == 0:
-                print(f"处理进度: {i+1}/{len(stock_files)}")
+            if i % 100 == 0:
+                progress = (i+1) / len(stock_files) * 100
+                print(f"处理进度: {i+1}/{len(stock_files)} ({progress:.1f}%)")
                 
             try:
                 stock_code = os.path.basename(file_path).replace('.csv', '')
@@ -584,32 +584,51 @@ class ImprovedDataProcessor:
         print("  - data_info.json: 数据信息")
 
 
-def main():
-    """主处理流程"""
+def main(limit_stocks=None):
+    """
+    主处理流程
+    
+    Args:
+        limit_stocks: 限制股票数量，None表示加载全部股票
+    """
     print("开始改进的数据处理...")
+    
+    if limit_stocks is None:
+        print("⚠️  注意：将处理全部股票数据（约5400+只），预计需要较长时间和大量内存")
+        print("💡 建议：如果内存不足，可以设置limit_stocks参数限制股票数量")
+        print("📊 预计内存需求：16GB+ RAM，处理时间：30-60分钟")
+    else:
+        print(f"📊 限制处理股票数量：{limit_stocks} 只")
     
     # 创建改进的数据处理器
     processor = ImprovedDataProcessor(data_base_path="./data")
     
     try:
         # 1. 加载个股数据
-        stock_data_dict = processor.load_individual_stock_data(limit_stocks=50)  # 限制50只股票
+        print(f"\n🔄 步骤1/6: 加载个股数据...")
+        stock_data_dict = processor.load_individual_stock_data(limit_stocks=limit_stocks)
         
         # 2. 加载行业板块数据
+        print(f"\n🔄 步骤2/6: 加载行业板块数据...")
         sector_data_dict = processor.load_sector_data()
         
         # 3. 加载指数数据
+        print(f"\n🔄 步骤3/6: 加载指数数据...")
         index_data = processor.load_index_data()
         
         # 4. 加载情绪数据
+        print(f"\n🔄 步骤4/6: 加载情绪数据...")
         sentiment_data = processor.load_sentiment_data()
         
         # 5. 创建训练样本
+        print(f"\n🔄 步骤5/6: 创建训练样本...")
+        print("⏳ 这一步可能需要较长时间，请耐心等待...")
         X, y, stock_codes = processor.create_training_samples(
             stock_data_dict, sector_data_dict, index_data, sentiment_data
         )
         
         # 6. 保存处理后的数据
+        print(f"\n🔄 步骤6/6: 保存处理后的数据...")
         processor.save_processed_data(X, y, stock_codes)
         
         print("\n改进的数据处理完成！")
@@ -632,4 +651,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    
+    # 命令行参数处理
+    if len(sys.argv) > 1:
+        try:
+            limit_stocks = int(sys.argv[1])
+            print(f"📋 从命令行参数设置股票限制: {limit_stocks}")
+            main(limit_stocks=limit_stocks)
+        except ValueError:
+            print("❌ 错误：股票数量参数必须是整数")
+            print("💡 用法：python 股板指情数据汇总处理.py [股票数量]")
+            print("📝 示例：python 股板指情数据汇总处理.py 100  # 处理100只股票")
+            print("📝 示例：python 股板指情数据汇总处理.py     # 处理全部股票")
+    else:
+        # 默认处理全部股票
+        main(limit_stocks=None)

@@ -1,11 +1,11 @@
 {
   "X_shape": [
-    22092,
+    2430962,
     30,
     27
   ],
   "y_shape": [
-    22092
+    2430962
   ],
   "feature_dims": {
     "stock": 15,
@@ -14,7 +14,7 @@
     "sentiment": 2,
     "total": 27
   },
-  "num_samples": 22092,
-  "num_stocks": 47,
-  "processing_time": "2025-08-07T18:56:14.974138"
+  "num_samples": 2430962,
+  "num_stocks": 5219,
+  "processing_time": "2025-08-07T20:45:28.404162"
 }
