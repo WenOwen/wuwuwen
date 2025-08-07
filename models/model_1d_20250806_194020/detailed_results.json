@@ -1,0 +1,22 @@
+{
+  "LightGBM": {
+    "accuracy": 0.5526,
+    "model_type": "LightGBM"
+  },
+  "LSTM": {
+    "accuracy": 0.5173,
+    "model_type": "LSTM"
+  },
+  "Transformer": {
+    "accuracy": 0.513,
+    "model_type": "Transformer"
+  },
+  "CNN-LSTM": {
+    "accuracy": 0.5197,
+    "model_type": "CNN-LSTM"
+  },
+  "Ensemble": {
+    "accuracy": 0.5367,
+    "model_type": "Ensemble"
+  }
+}
