@@ -58,16 +58,23 @@ def get_real_sector_data():
         logger.error(f"❌ 获取行业板块数据失败: {str(e)}")
         df_industry = pd.DataFrame()
 
-    # 2. 获取概念板块数据
-    logger.info("📊 获取概念板块数据...")
+    # 2. 获取概念板块数据（完整的438个概念板块）
+    logger.info("📊 获取完整概念板块数据...")
     try:
         df_concept = s_f_1.get_concept_data_from_eastmoney(sort_field='f3')
         if not df_concept.empty:
             concept_file = os.path.join(save_dir, "概念板块数据.csv")
             df_concept.to_csv(concept_file, index=False, encoding='utf-8-sig')
             logger.info(f"✅ 概念板块数据已保存: {concept_file} ({len(df_concept)}行)")
+            logger.info(f"📊 成功获取完整的 {len(df_concept)} 个概念板块（预期438个）")
             print("涨幅排行前10的概念:")
             print(df_concept[['概念名称', '涨跌幅', '主力净流入', '成交额', '总市值', '流通市值']].head(10))
+            
+            # 显示获取统计
+            up_count = len(df_concept[df_concept['涨跌幅'] > 0])
+            down_count = len(df_concept[df_concept['涨跌幅'] < 0])
+            flat_count = len(df_concept[df_concept['涨跌幅'] == 0])
+            logger.info(f"📈 概念板块表现: 上涨{up_count}个, 下跌{down_count}个, 平盘{flat_count}个")
         else:
             logger.warning("⚠️ 概念板块数据为空")
     except Exception as e:
@@ -136,7 +143,80 @@ def load_all_stock_list():
         logger.error(f"❌ 加载股票列表失败: {str(e)}")
         return []
 
-def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
+def get_latest_data_date(file_path):
+    """
+    获取数据文件中最新的日期
+    
+    Args:
+        file_path: 数据文件路径
+        
+    Returns:
+        最新日期字符串 (YYYY-MM-DD格式) 或 None
+    """
+    if not os.path.exists(file_path):
+        return None
+    
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8-sig')
+        if len(df) == 0:
+            return None
+        
+        # 查找日期列
+        date_columns = ['日期', 'date', '时间', 'datetime']
+        date_col = None
+        for col in date_columns:
+            if col in df.columns:
+                date_col = col
+                break
+        
+        if date_col is None:
+            logger.warning(f"⚠️ 文件 {file_path} 中未找到日期列")
+            return None
+        
+        # 获取最新日期
+        latest_date = df[date_col].max()
+        # 转换为标准格式
+        if pd.notna(latest_date):
+            if isinstance(latest_date, str):
+                return latest_date
+            else:
+                return latest_date.strftime('%Y-%m-%d')
+        
+        return None
+        
+    except Exception as e:
+        logger.warning(f"⚠️ 读取文件 {file_path} 最新日期失败: {str(e)}")
+        return None
+
+def check_stock_mapping_update_needed():
+    """
+    检查股票板块映射是否需要更新
+    
+    Returns:
+        tuple: (需要更新, 最新日期, 说明信息)
+    """
+    mapping_file = "data/datas_sector_historical/股票板块映射表.csv"
+    
+    if not os.path.exists(mapping_file):
+        return True, None, "映射文件不存在，需要全量获取"
+    
+    try:
+        # 检查文件修改时间
+        file_mtime = os.path.getmtime(mapping_file)
+        file_date = datetime.fromtimestamp(file_mtime)
+        current_date = datetime.now()
+        days_diff = (current_date - file_date).days
+        
+        if days_diff >= 7:  # 超过7天则建议更新
+            return True, file_date.strftime('%Y-%m-%d'), f"文件已{days_diff}天未更新，建议更新"
+        else:
+            return False, file_date.strftime('%Y-%m-%d'), f"文件较新（{days_diff}天前更新），无需更新"
+            
+    except Exception as e:
+        logger.warning(f"⚠️ 检查映射文件状态失败: {str(e)}")
+        return True, None, "无法检查文件状态，建议更新"
+
+def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50, incremental=False):
     """
     获取股票的板块映射信息
     
@@ -144,8 +224,22 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
         max_stocks: 最大处理股票数量，None表示处理全部
         start_from: 从第几只股票开始处理（用于断点续传）
         batch_size: 批次大小，每批保存一次中间结果
+        incremental: 是否为增量更新模式
     """
     logger.info("📊 获取股票板块映射信息...")
+    
+    # 增量更新模式检查
+    if incremental:
+        needs_update, last_date, message = check_stock_mapping_update_needed()
+        logger.info(f"🔍 增量更新检查: {message}")
+        
+        if not needs_update:
+            logger.info("✅ 股票映射数据较新，跳过更新")
+            mapping_file = "data/datas_sector_historical/股票板块映射表.csv"
+            if os.path.exists(mapping_file):
+                return pd.read_csv(mapping_file, encoding='utf-8-sig')
+            
+        logger.info("🔄 启动增量更新模式")
     
     # 初始化Spider_func实例
     s_f_1 = Spider_func()
@@ -170,7 +264,7 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
     logger.info(f"📊 本批次处理: {len(stock_codes)} 只股票")
     
     # 检查是否有已保存的中间结果
-    temp_file = "data/datas_sector/股票板块映射_临时.csv"
+    temp_file = "data/datas_sector_historical/股票板块映射_临时.csv"
     existing_data = []
     if os.path.exists(temp_file):
         try:
@@ -191,7 +285,7 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
     batch_count = 0
     
     # 创建保存目录
-    os.makedirs("data/datas_sector", exist_ok=True)
+    os.makedirs("data/datas_sector_historical", exist_ok=True)
     
     logger.info(f"🚀 开始获取 {len(stock_codes)} 只股票的板块信息...")
     logger.info(f"💾 每 {batch_size} 只股票保存一次中间结果")
@@ -222,9 +316,7 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
                     '股票名称': stock_info.get('股票名称', ''),
                     '所属行业': stock_info.get('所属行业', ''),
                     '概念板块': stock_info.get('概念板块', ''),
-                    '地区': stock_info.get('地区', ''),
-                    '总股本': stock_info.get('总股本', ''),
-                    '流通股': stock_info.get('流通股', '')
+                    '地区': stock_info.get('地区', '')
                 }
                 stock_sector_mapping.append(mapping_info)
                 successful_count += 1
@@ -234,6 +326,8 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
                     print(f"{stock_info['股票名称']}({stock_code}):")
                     print(f"  所属行业: {stock_info['所属行业']}")
                     print(f"  概念板块: {stock_info['概念板块']}")
+                    if stock_info.get('地区'):
+                        print(f"  地区: {stock_info['地区']}")
                     print()
             else:
                 logger.warning(f"⚠️ 无法获取股票 {stock_code} 的信息")
@@ -251,6 +345,11 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
             
             # 添加延迟避免请求太频繁
             time.sleep(0.1)
+            
+            # 每处理100个股票显示一次进度统计
+            if i % 100 == 0:
+                success_rate = (successful_count / i) * 100
+                logger.info(f"📊 中期统计: 成功率 {success_rate:.1f}% ({successful_count}/{i})")
                 
         except Exception as e:
             logger.error(f"❌ 获取股票 {stock_code} 信息时出错: {str(e)}")
@@ -270,7 +369,7 @@ def get_stock_sector_mapping(max_stocks=None, start_from=0, batch_size=50):
         df_stock_mapping = pd.DataFrame(stock_sector_mapping)
         
         # 保存完整映射
-        save_dir = "data/datas_sector"
+        save_dir = "data/datas_sector_historical"
         os.makedirs(save_dir, exist_ok=True)
         mapping_file = os.path.join(save_dir, "股票板块映射表.csv")
         df_stock_mapping.to_csv(mapping_file, index=False, encoding='utf-8-sig')
@@ -334,14 +433,402 @@ def create_sector_summary():
     
     logger.info(f"✅ 数据摘要已保存: {summary_file}")
 
+def check_sector_data_update_needed(sector_name, sector_code, sector_type):
+    """
+    检查板块数据是否需要更新
+    
+    Args:
+        sector_name: 板块名称
+        sector_code: 板块代码
+        sector_type: 板块类型
+        
+    Returns:
+        tuple: (需要更新, 最新日期, 数据文件路径)
+    """
+    # 查找可能的数据文件
+    possible_dirs = [
+        "data/datas_sector_historical/行业板块_全部历史",
+        "data/datas_sector_historical/概念板块_全部历史",
+        "data/datas_sector_historical/行业板块",
+        "data/datas_sector_historical/概念板块",
+        "data/datas_sector_historical"
+    ]
+    
+    possible_filenames = [
+        f"{sector_name}({sector_code})_daily_历史数据.csv",
+        f"{sector_name}_{sector_code}_daily_历史数据.csv",
+        f"板块{sector_code}_daily_历史数据.csv",
+        f"{sector_code}_daily_历史数据.csv"
+    ]
+    
+    data_file = None
+    for dir_path in possible_dirs:
+        if os.path.exists(dir_path):
+            for filename in possible_filenames:
+                file_path = os.path.join(dir_path, filename)
+                if os.path.exists(file_path):
+                    data_file = file_path
+                    break
+        if data_file:
+            break
+    
+    if not data_file:
+        return True, None, None
+    
+    # 获取最新日期
+    latest_date = get_latest_data_date(data_file)
+    if not latest_date:
+        return True, None, data_file
+    
+    # 检查日期是否需要更新（超过1天）
+    try:
+        latest_dt = datetime.strptime(latest_date, '%Y-%m-%d')
+        current_dt = datetime.now()
+        days_diff = (current_dt - latest_dt).days
+        
+        if days_diff >= 1:  # 超过1天则需要更新
+            return True, latest_date, data_file
+        else:
+            return False, latest_date, data_file
+            
+    except Exception as e:
+        logger.warning(f"⚠️ 解析日期失败: {str(e)}")
+        return True, latest_date, data_file
+
+def get_historical_data():
+    """获取板块历史数据"""
+    logger.info("📊 获取板块历史数据模式")
+    
+    print("请选择历史数据获取选项:")
+    print("1. 获取所有行业板块历史数据（指定天数）")
+    print("2. 获取所有概念板块历史数据（指定天数）") 
+    print("3. 获取单个板块历史数据（指定天数）")
+    print("4. 获取所有行业板块全部历史数据")
+    print("5. 获取所有概念板块全部历史数据")
+    print("6. 获取单个板块全部历史数据")
+    print("7. 🔄 增量更新所有行业板块数据（从最新日期开始）")
+    print("8. 🔄 增量更新所有概念板块数据（从最新日期开始）")
+    print("9. 🔄 增量更新单个板块数据（从最新日期开始）")
+    print("10. 🧠 智能增量更新（自动检测需要更新的板块）")
+    print("11. 返回主菜单")
+    
+    choice = input("请选择 (1-11): ").strip()
+    
+    if choice == "11":
+        return
+    
+    # 新增智能增量更新功能
+    if choice == "10":
+        smart_incremental_update()
+        return
+    
+    # 判断是否获取全部历史数据
+    get_all_history = choice in ["4", "5", "6"]
+    
+    # 判断是否为增量更新
+    is_incremental = choice in ["7", "8", "9"]
+    
+    if get_all_history:
+        print("\n📅 将获取板块的全部历史数据（可能需要较长时间）")
+        trading_days = 2000  # 设置一个大数值获取尽可能多的数据
+    elif is_incremental:
+        print("\n🔄 增量更新模式：将从最新数据日期开始获取到今天")
+        trading_days = None  # 增量模式不需要设置天数
+    else:
+        # 设置交易日数量
+        print("\n设置获取数据量:")
+        try:
+            trading_days = int(input("请输入要获取最近多少个交易日的数据 (回车默认30个): ").strip() or "30")
+            if trading_days <= 0 or trading_days > 1000:
+                trading_days = 30
+                print("数量无效，使用默认30个交易日")
+        except ValueError:
+            trading_days = 30
+            print("输入无效，使用默认30个交易日")
+        
+        print(f"将获取最近 {trading_days} 个交易日的日线数据")
+    
+    s_f_1 = Spider_func()
+    
+    if choice in ["1", "4", "7"]:
+        # 获取所有行业板块历史数据
+        if choice == "7":  # 增量更新
+            data_type = "增量更新"
+            save_dir = "data/datas_sector_historical/行业板块"
+            logger.info(f"开始增量更新所有行业板块数据...")
+        else:
+            data_type = "全部" if get_all_history else f"最近{trading_days}个交易日"
+            save_dir = "data/datas_sector_historical/行业板块_全部历史" if get_all_history else "data/datas_sector_historical/行业板块"
+            logger.info(f"开始获取所有行业板块{data_type}历史数据...")
+        
+        all_data = s_f_1.get_all_sectors_historical_data(
+            sector_type='industry',
+            trading_days=trading_days,
+            period='daily',
+            save_dir=save_dir,
+            is_incremental=(choice == "7")
+        )
+        logger.info(f"✅ 成功获取 {len(all_data)} 个行业板块的{data_type}历史数据")
+        
+    elif choice in ["2", "5", "8"]:
+        # 获取所有概念板块历史数据
+        if choice == "8":  # 增量更新
+            data_type = "增量更新"
+            save_dir = "data/datas_sector_historical/概念板块"
+            logger.info(f"开始增量更新所有概念板块数据...")
+        else:
+            data_type = "全部" if get_all_history else f"最近{trading_days}个交易日"
+            save_dir = "data/datas_sector_historical/概念板块_全部历史" if get_all_history else "data/datas_sector_historical/概念板块"
+            logger.info(f"开始获取所有概念板块{data_type}历史数据...")
+        
+        all_data = s_f_1.get_all_sectors_historical_data(
+            sector_type='concept',
+            trading_days=trading_days,
+            period='daily',
+            save_dir=save_dir,
+            is_incremental=(choice == "8")
+        )
+        logger.info(f"✅ 成功获取 {len(all_data)} 个概念板块的{data_type}历史数据")
+        
+    elif choice in ["3", "6", "9"]:
+        # 获取单个板块历史数据
+        print("\n输入板块信息:")
+        sector_code = input("板块代码: ").strip()
+        sector_type = input("板块类型 (industry/concept): ").strip()
+        
+        if not sector_code or sector_type not in ['industry', 'concept']:
+            logger.error("❌ 板块信息输入错误")
+            return
+        
+        if choice == "9":  # 增量更新
+            data_type = "增量更新"
+            logger.info(f"开始增量更新板块 {sector_code} 数据...")
+            
+            historical_df = s_f_1.get_historical_sector_data_from_eastmoney(
+                sector_code=sector_code,
+                sector_type=sector_type,
+                trading_days=None,
+                period='daily',
+                is_incremental=True
+            )
+        else:
+            data_type = "全部" if get_all_history else f"最近{trading_days}个交易日"
+            logger.info(f"开始获取板块 {sector_code} 的{data_type}历史数据...")
+            
+            historical_df = s_f_1.get_historical_sector_data_from_eastmoney(
+                sector_code=sector_code,
+                sector_type=sector_type,
+                trading_days=trading_days,
+                period='daily'
+            )
+        
+        if not historical_df.empty:
+            # 保存数据
+            if choice == "9":
+                suffix = "增量更新"
+                save_dir = "data/datas_sector_historical"
+            else:
+                suffix = "全部历史" if get_all_history else f"最近{trading_days}天"
+                save_dir = "data/datas_sector"
+            
+            filename = f"板块{sector_code}_daily_{suffix}_数据.csv"
+            filepath = os.path.join(save_dir, filename)
+            os.makedirs(save_dir, exist_ok=True)
+            historical_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+            logger.info(f"✅ {data_type}历史数据已保存: {filepath} ({len(historical_df)}条)")
+        else:
+            logger.warning(f"⚠️ 无法获取板块 {sector_code} 的{data_type}历史数据")
+
+def smart_incremental_update():
+    """智能增量更新功能"""
+    logger.info("🧠 启动智能增量更新模式")
+    
+    s_f_1 = Spider_func()
+    
+    # 1. 检查并更新行业板块数据
+    logger.info("🔍 检查行业板块数据...")
+    try:
+        industry_df = s_f_1.get_industry_data_from_eastmoney()
+        if not industry_df.empty:
+            update_count = 0
+            skip_count = 0
+            
+            for index, row in industry_df.iterrows():
+                sector_code = row['行业代码']
+                sector_name = row['行业名称']
+                
+                needs_update, latest_date, data_file = check_sector_data_update_needed(
+                    sector_name, sector_code, 'industry'
+                )
+                
+                if needs_update:
+                    logger.info(f"🔄 更新行业板块: {sector_name}({sector_code})")
+                    if latest_date:
+                        logger.info(f"  📅 从 {latest_date} 开始增量更新")
+                    
+                    # 执行增量更新
+                    historical_df = s_f_1.get_historical_sector_data_from_eastmoney(
+                        sector_code=sector_code,
+                        sector_type='industry',
+                        trading_days=None,
+                        period='daily',
+                        is_incremental=True
+                    )
+                    
+                    if not historical_df.empty:
+                        # 保存或合并数据
+                        save_dir = "data/datas_sector_historical/行业板块_全部历史"
+                        os.makedirs(save_dir, exist_ok=True)
+                        filename = f"{sector_name}({sector_code})_daily_历史数据.csv"
+                        filepath = os.path.join(save_dir, filename)
+                        
+                        if data_file and os.path.exists(data_file):
+                            # 合并现有数据
+                            existing_df = pd.read_csv(data_file, encoding='utf-8-sig')
+                            combined_df = pd.concat([existing_df, historical_df], ignore_index=True)
+                            # 去重并按日期排序
+                            combined_df = combined_df.drop_duplicates(subset=['日期']).sort_values('日期')
+                            combined_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+                        else:
+                            historical_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+                        
+                        update_count += 1
+                        logger.info(f"  ✅ 已更新: {len(historical_df)} 条新数据")
+                    else:
+                        logger.warning(f"  ⚠️ 无新数据")
+                else:
+                    skip_count += 1
+                    if index < 5:  # 只显示前几个跳过的
+                        logger.info(f"  ⏭️ 跳过 {sector_name}: 数据已是最新")
+                
+                # 添加延迟避免频繁请求
+                time.sleep(0.2)
+            
+            logger.info(f"📊 行业板块检查完成: 更新{update_count}个, 跳过{skip_count}个")
+            
+    except Exception as e:
+        logger.error(f"❌ 检查行业板块数据失败: {str(e)}")
+    
+    # 2. 检查并更新概念板块数据
+    logger.info("🔍 检查概念板块数据...")
+    try:
+        concept_df = s_f_1.get_concept_data_from_eastmoney()
+        if not concept_df.empty:
+            update_count = 0
+            skip_count = 0
+            
+            # 由于概念板块较多，只检查前100个（可配置）
+            max_concepts = 100
+            logger.info(f"📝 概念板块较多({len(concept_df)}个)，检查前{max_concepts}个")
+            
+            for index, row in concept_df.head(max_concepts).iterrows():
+                sector_code = row['概念代码']
+                sector_name = row['概念名称']
+                
+                needs_update, latest_date, data_file = check_sector_data_update_needed(
+                    sector_name, sector_code, 'concept'
+                )
+                
+                if needs_update:
+                    logger.info(f"🔄 更新概念板块: {sector_name}({sector_code})")
+                    if latest_date:
+                        logger.info(f"  📅 从 {latest_date} 开始增量更新")
+                    
+                    # 执行增量更新
+                    historical_df = s_f_1.get_historical_sector_data_from_eastmoney(
+                        sector_code=sector_code,
+                        sector_type='concept',
+                        trading_days=None,
+                        period='daily',
+                        is_incremental=True
+                    )
+                    
+                    if not historical_df.empty:
+                        # 保存或合并数据
+                        save_dir = "data/datas_sector_historical/概念板块_全部历史"
+                        os.makedirs(save_dir, exist_ok=True)
+                        filename = f"{sector_name}({sector_code})_daily_历史数据.csv"
+                        filepath = os.path.join(save_dir, filename)
+                        
+                        if data_file and os.path.exists(data_file):
+                            # 合并现有数据
+                            existing_df = pd.read_csv(data_file, encoding='utf-8-sig')
+                            combined_df = pd.concat([existing_df, historical_df], ignore_index=True)
+                            # 去重并按日期排序
+                            combined_df = combined_df.drop_duplicates(subset=['日期']).sort_values('日期')
+                            combined_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+                        else:
+                            historical_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+                        
+                        update_count += 1
+                        logger.info(f"  ✅ 已更新: {len(historical_df)} 条新数据")
+                    else:
+                        logger.warning(f"  ⚠️ 无新数据")
+                else:
+                    skip_count += 1
+                    if index < 3:  # 只显示前几个跳过的
+                        logger.info(f"  ⏭️ 跳过 {sector_name}: 数据已是最新")
+                
+                # 添加延迟避免频繁请求
+                time.sleep(0.2)
+            
+            logger.info(f"📊 概念板块检查完成: 更新{update_count}个, 跳过{skip_count}个")
+            
+    except Exception as e:
+        logger.error(f"❌ 检查概念板块数据失败: {str(e)}")
+    
+    # 3. 检查并更新股票板块映射
+    logger.info("🔍 检查股票板块映射...")
+    try:
+        needs_update, last_date, message = check_stock_mapping_update_needed()
+        if needs_update:
+            logger.info(f"🔄 更新股票板块映射: {message}")
+            get_stock_sector_mapping(max_stocks=None, incremental=True)
+        else:
+            logger.info(f"⏭️ 跳过股票映射更新: {message}")
+    except Exception as e:
+        logger.error(f"❌ 检查股票映射失败: {str(e)}")
+    
+    logger.info("🎉 智能增量更新完成！")
+
 def main():
     """主函数"""
     logger.info("=" * 60)
-    logger.info("🚀 AI股市预测系统 - 真实板块数据获取")
+    logger.info("🚀 AI股市预测系统 - 板块数据获取工具")
     logger.info("=" * 60)
     
-    # 配置选项
-    print("请选择数据获取模式:")
+    # 主菜单
+    print("请选择功能:")
+    print("1. 获取当前板块数据和股票板块映射")
+    print("2. 获取板块历史数据")
+    print("3. 🧠 智能增量更新（推荐）")
+    print("4. 🔄 股票映射增量更新")
+    print("5. 退出")
+    
+    try:
+        main_choice = input("请选择 (1-5): ").strip()
+        
+        if main_choice == "2":
+            get_historical_data()
+            return
+        elif main_choice == "3":
+            smart_incremental_update()
+            return
+        elif main_choice == "4":
+            logger.info("🔄 启动股票映射增量更新...")
+            get_stock_sector_mapping(max_stocks=None, incremental=True)
+            return
+        elif main_choice == "5":
+            logger.info("程序退出")
+            return
+        elif main_choice != "1":
+            logger.info("使用默认模式: 获取当前板块数据")
+    except KeyboardInterrupt:
+        logger.info("用户取消操作")
+        return
+    
+    # 原有的股票板块映射功能
+    print("\n请选择股票数据获取模式:")
     print("1. 快速测试模式 (100只股票)")
     print("2. 中等规模模式 (500只股票)")
     print("3. 大规模模式 (1000只股票)")
@@ -393,7 +880,8 @@ def main():
         df_stock_mapping = get_stock_sector_mapping(
             max_stocks=max_stocks,
             start_from=0,
-            batch_size=50
+            batch_size=50,
+            incremental=False
         )
         
         # 3. 创建数据摘要
@@ -405,7 +893,8 @@ def main():
         
         logger.info("🎉 所有板块数据获取完成！")
         logger.info(f"⏱️ 总耗时: {duration}")
-        logger.info("📁 数据保存在 data/datas_sector/ 目录中")
+        logger.info("📁 板块数据保存在 data/datas_sector/ 目录中")
+        logger.info("📁 股票映射表保存在 data/datas_sector_historical/ 目录中")
         logger.info("💡 可以直接使用 股票板块映射表.csv 进行模型训练")
         
         # 显示获取统计
@@ -422,12 +911,121 @@ def main():
         import traceback
         logger.error(f"详细错误: {traceback.format_exc()}")
 
+def check_for_incomplete_tasks():
+    """
+    检查未完成的任务
+    
+    Returns:
+        dict: 包含各种未完成任务的状态信息
+    """
+    status = {
+        'stock_mapping_incomplete': False,
+        'temp_file': None,
+        'processed_count': 0,
+        'sector_data_incomplete': [],
+        'recommendations': []
+    }
+    
+    # 1. 检查股票映射临时文件
+    temp_file = "data/datas_sector_historical/股票板块映射_临时.csv"
+    if os.path.exists(temp_file):
+        try:
+            df_temp = pd.read_csv(temp_file, encoding='utf-8-sig')
+            status['stock_mapping_incomplete'] = True
+            status['temp_file'] = temp_file
+            status['processed_count'] = len(df_temp)
+            status['recommendations'].append(f"发现未完成的股票映射任务，已处理{len(df_temp)}只股票")
+        except Exception as e:
+            logger.warning(f"⚠️ 读取临时文件失败: {str(e)}")
+    
+    # 2. 检查板块数据完整性
+    data_dirs = [
+        ("data/datas_sector_historical/行业板块_全部历史", "行业板块"),
+        ("data/datas_sector_historical/概念板块_全部历史", "概念板块")
+    ]
+    
+    for data_dir, data_type in data_dirs:
+        if os.path.exists(data_dir):
+            files = [f for f in os.listdir(data_dir) if f.endswith('.csv')]
+            outdated_files = []
+            
+            for file in files[:10]:  # 只检查前10个文件，避免过慢
+                file_path = os.path.join(data_dir, file)
+                latest_date = get_latest_data_date(file_path)
+                if latest_date:
+                    try:
+                        latest_dt = datetime.strptime(latest_date, '%Y-%m-%d')
+                        days_diff = (datetime.now() - latest_dt).days
+                        if days_diff >= 2:  # 超过2天未更新
+                            outdated_files.append((file, latest_date, days_diff))
+                    except:
+                        pass
+            
+            if outdated_files:
+                status['sector_data_incomplete'].append({
+                    'type': data_type,
+                    'outdated_count': len(outdated_files),
+                    'examples': outdated_files[:3]
+                })
+                status['recommendations'].append(f"{data_type}有{len(outdated_files)}个文件需要更新")
+    
+    return status
+
+def smart_resume_dialog():
+    """智能恢复对话"""
+    logger.info("🔍 检查未完成的任务...")
+    
+    status = check_for_incomplete_tasks()
+    
+    if not status['stock_mapping_incomplete'] and not status['sector_data_incomplete']:
+        logger.info("✅ 所有任务都是最新的，无需恢复")
+        return False
+    
+    print("\n" + "=" * 50)
+    print("🔄 发现未完成的任务")
+    print("=" * 50)
+    
+    if status['stock_mapping_incomplete']:
+        print(f"📊 股票板块映射: 已处理{status['processed_count']}只股票，有待继续")
+    
+    for incomplete in status['sector_data_incomplete']:
+        print(f"📈 {incomplete['type']}: {incomplete['outdated_count']}个文件需要更新")
+        for file, date, days in incomplete['examples'][:2]:
+            print(f"  - {file}: 最新数据{date} ({days}天前)")
+    
+    print("\n建议操作:")
+    for i, recommendation in enumerate(status['recommendations'], 1):
+        print(f"{i}. {recommendation}")
+    
+    print("\n选择操作:")
+    print("1. 🧠 智能增量更新（推荐）")
+    print("2. 🔄 继续股票映射任务")
+    print("3. ⏭️ 跳过，执行新任务")
+    print("4. 🚪 退出")
+    
+    choice = input("请选择 (1-4): ").strip()
+    
+    if choice == "1":
+        smart_incremental_update()
+        return True
+    elif choice == "2" and status['stock_mapping_incomplete']:
+        continue_from_interruption()
+        return True
+    elif choice == "3":
+        return False
+    elif choice == "4":
+        logger.info("用户选择退出")
+        return True
+    else:
+        logger.info("无效选择，继续执行新任务")
+        return False
+
 def continue_from_interruption():
     """从中断处继续获取数据"""
     logger.info("🔄 继续从中断处获取数据...")
     
     # 检查临时文件
-    temp_file = "data/datas_sector/股票板块映射_临时.csv"
+    temp_file = "data/datas_sector_historical/股票板块映射_临时.csv"
     if not os.path.exists(temp_file):
         logger.error("❌ 未找到中断的临时文件")
         return
@@ -441,7 +1039,8 @@ def continue_from_interruption():
         df_stock_mapping = get_stock_sector_mapping(
             max_stocks=None,  # 处理所有剩余
             start_from=0,     # 函数内部会自动跳过已处理的
-            batch_size=50
+            batch_size=50,
+            incremental=False
         )
         
         create_sector_summary()
@@ -451,15 +1050,11 @@ def continue_from_interruption():
         logger.error(f"❌ 继续处理失败: {str(e)}")
 
 if __name__ == "__main__":
-    # 检查是否有中断的临时文件
-    temp_file = "data/datas_sector/股票板块映射_临时.csv"
-    if os.path.exists(temp_file):
-        print("发现中断的临时文件，是否继续之前的工作？")
-        continue_choice = input("输入 'c' 继续，或任意键重新开始: ").strip().lower()
-        if continue_choice == 'c':
-            continue_from_interruption()
-        else:
-            main()
+    # 启动智能任务检查和恢复
+    if smart_resume_dialog():
+        # 如果智能恢复处理了任务，就不再执行主程序
+        pass
     else:
+        # 执行正常的主程序
         main()
 

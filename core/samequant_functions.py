@@ -1750,7 +1750,7 @@ class Spider_func():
 
     def get_concept_data_from_eastmoney(self, sort_field: str = 'f3') -> pd.DataFrame:
         """
-        获取概念板块数据
+        获取完整的概念板块数据（使用分页获取所有438个概念板块）
         :param sort_field: 排序字段，f3=涨跌幅，f62=主力净流入，f84=总市值
         :return: 包含概念板块数据的DataFrame
         """
@@ -1758,51 +1758,76 @@ class Spider_func():
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'
         }
         
-        timestamp = int(time.time() * 1000)
+        all_concepts = []
+        page = 1
+        page_size = 50
         
-        # 概念板块数据API
+        # 概念板块数据API字段
         fields = 'f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f62,f184,f66,f69,f72,f75,f78,f81,f82,f84,f85,f86,f87,f124'
-        url = f'http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=1000&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid={sort_field}&fs=m:90+t:3+f:!50&fields={fields}&_={timestamp}'
-
+        
         try:
-            resp = requests.get(url=url, headers=headers)
-            resp_json = resp.json()
-            
-            if 'data' in resp_json and resp_json['data'] is not None:
-                df = pd.DataFrame(resp_json['data']['diff'])
+            while True:
+                timestamp = int(time.time() * 1000)
+                url = f'http://push2.eastmoney.com/api/qt/clist/get?pn={page}&pz={page_size}&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid={sort_field}&fs=m:90+t:3+f:!50&fields={fields}&_={timestamp}'
                 
-                if not df.empty:
-                    # 选择并重命名列
-                    df = df[['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f15', 'f16', 'f17', 'f18', 'f20', 'f21', 'f62', 'f184', 'f84', 'f124']]
+                resp = requests.get(url=url, headers=headers)
+                resp_json = resp.json()
+                
+                if 'data' in resp_json and resp_json['data'] is not None and 'diff' in resp_json['data']:
+                    concepts = resp_json['data']['diff']
                     
-                    rename_dict = {
-                        'f12': '概念代码',
-                        'f14': '概念名称', 
-                        'f2': '最新价',
-                        'f3': '涨跌幅',
-                        'f4': '涨跌额',
-                        'f5': '成交量',
-                        'f6': '成交额',
-                        'f7': '振幅',
-                        'f15': '最高价',
-                        'f16': '最低价',
-                        'f17': '开盘价',
-                        'f18': '昨收价',
-                        'f20': '总市值',
-                        'f21': '流通市值',
-                        'f62': '主力净流入',
-                        'f184': '主力净流入占比',
-                        'f84': '总股本',
-                        'f124': '更新时间'
-                    }
+                    if not concepts:  # 没有更多数据
+                        break
                     
-                    df.rename(columns=rename_dict, inplace=True)
+                    all_concepts.extend(concepts)
+                    page += 1
                     
-                    # 转换数据类型
-                    numeric_cols = ['最新价', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '最高价', '最低价', '开盘价', '昨收价', '总市值', '流通市值', '主力净流入', '主力净流入占比', '总股本']
-                    df[numeric_cols] = df[numeric_cols].astype(float)
-                    
-                    return df
+                    # 如果这一页的数据少于页面大小，说明已经是最后一页
+                    if len(concepts) < page_size:
+                        break
+                else:
+                    break
+                
+                # 添加短暂延迟避免请求太频繁
+                time.sleep(0.1)
+            
+            if all_concepts:
+                df = pd.DataFrame(all_concepts)
+                
+                # 选择并重命名列
+                available_cols = [col for col in ['f12', 'f14', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f15', 'f16', 'f17', 'f18', 'f20', 'f21', 'f62', 'f184', 'f84', 'f124'] if col in df.columns]
+                df = df[available_cols]
+                
+                rename_dict = {
+                    'f12': '概念代码',
+                    'f14': '概念名称', 
+                    'f2': '最新价',
+                    'f3': '涨跌幅',
+                    'f4': '涨跌额',
+                    'f5': '成交量',
+                    'f6': '成交额',
+                    'f7': '振幅',
+                    'f15': '最高价',
+                    'f16': '最低价',
+                    'f17': '开盘价',
+                    'f18': '昨收价',
+                    'f20': '总市值',
+                    'f21': '流通市值',
+                    'f62': '主力净流入',
+                    'f184': '主力净流入占比',
+                    'f84': '总股本',
+                    'f124': '更新时间'
+                }
+                
+                df.rename(columns=rename_dict, inplace=True)
+                
+                # 转换数据类型
+                numeric_cols = [col for col in ['最新价', '涨跌幅', '涨跌额', '成交量', '成交额', '振幅', '最高价', '最低价', '开盘价', '昨收价', '总市值', '流通市值', '主力净流入', '主力净流入占比', '总股本'] if col in df.columns]
+                for col in numeric_cols:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                
+                print(f'✅ 成功获取 {len(df)} 个概念板块数据')
+                return df
             
             print('获取概念板块数据失败')
             return pd.DataFrame()
@@ -2053,6 +2078,331 @@ class Spider_func():
             
         except Exception as e:
             print(f'获取热门概念数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_historical_sector_data_from_eastmoney(self, sector_code: str, sector_type: str = 'industry', 
+                                                  trading_days: int = 30, period: str = 'daily', 
+                                                  is_incremental: bool = False, save_dir: str = None) -> pd.DataFrame:
+        """
+        获取板块历史数据
+        :param sector_code: 板块代码
+        :param sector_type: 板块类型，'industry'行业板块 或 'concept'概念板块
+        :param trading_days: 获取最近多少个交易日，默认30个交易日
+        :param period: 数据周期，'daily'日线 'weekly'周线 'monthly'月线
+        :param is_incremental: 是否为增量更新模式
+        :param save_dir: 保存目录，用于增量更新时查找现有数据
+        :return: 包含历史数据的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
+            'Referer': 'http://quote.eastmoney.com/'
+        }
+        
+        # 增量更新逻辑
+        start_date_override = None
+        if is_incremental and save_dir:
+            # 查找现有数据文件
+            import os
+            sector_name = f"板块{sector_code}"  # 临时名称，可能需要获取真实名称
+            possible_filenames = [
+                f"{sector_name}({sector_code})_daily_历史数据.csv",
+                f"{sector_code}_daily_历史数据.csv"
+            ]
+            
+            existing_file = None
+            for filename in possible_filenames:
+                file_path = os.path.join(save_dir, filename)
+                if os.path.exists(file_path):
+                    existing_file = file_path
+                    break
+            
+            if existing_file:
+                try:
+                    import pandas as pd
+                    existing_df = pd.read_csv(existing_file, encoding='utf-8-sig')
+                    if len(existing_df) > 0 and '日期' in existing_df.columns:
+                        latest_date = existing_df['日期'].max()
+                        # 从最新日期的下一天开始获取
+                        latest_dt = datetime.datetime.strptime(latest_date, '%Y-%m-%d')
+                        next_day = latest_dt + datetime.timedelta(days=1)
+                        start_date_override = next_day.strftime('%Y%m%d')
+                        print(f"增量更新模式: 从 {latest_date} 之后开始获取数据")
+                except Exception as e:
+                    print(f"读取现有数据失败，使用常规获取模式: {e}")
+        
+        try:
+            # 计算日期范围（基于交易日数量）
+            end_date = datetime.datetime.now().strftime('%Y%m%d')
+            
+            # 使用增量更新的起始日期覆盖
+            if start_date_override:
+                start_date = start_date_override
+                print(f"增量更新数据，日期范围: {start_date} 至 {end_date}")
+            elif trading_days >= 1000:
+                # 获取全部历史数据，设置一个很早的开始日期
+                start_date = '20100101'  # 从2010年开始，涵盖大部分板块的历史
+                print(f"获取全部历史数据，日期范围: {start_date} 至 {end_date}")
+            else:
+                # 为了确保获取到足够的交易日，实际获取天数要多一些（考虑周末和节假日）
+                actual_days = trading_days * 2  # 大约两倍天数确保包含足够交易日
+                start_dt = datetime.datetime.now() - datetime.timedelta(days=actual_days)
+                start_date = start_dt.strftime('%Y%m%d')
+                print(f"获取最近{trading_days}个交易日数据，日期范围: {start_date} 至 {end_date}")
+            
+            # 根据周期设置参数
+            klt_map = {'daily': '101', 'weekly': '102', 'monthly': '103'}
+            klt = klt_map.get(period, '101')
+            
+            # 根据板块类型设置secid前缀
+            if sector_type == 'industry':
+                secid = f"90.{sector_code}"  # 行业板块使用90前缀
+            else:
+                secid = f"90.{sector_code}"  # 概念板块也使用90前缀
+            
+            # 构建历史数据API URL
+            if trading_days >= 1000:
+                # 获取全部历史数据，不限制数量
+                url = f'http://push2his.eastmoney.com/api/qt/stock/kline/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt={klt}&fqt=1&beg={start_date}&end={end_date}&_={int(time.time() * 1000)}'
+            else:
+                # 获取指定数量的数据
+                url = f'http://push2his.eastmoney.com/api/qt/stock/kline/get?secid={secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields1=f1,f2,f3,f4,f5,f6&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61&klt={klt}&fqt=1&beg={start_date}&end={end_date}&lmt={trading_days}&_={int(time.time() * 1000)}'
+            
+            print(f"正在获取板块 {sector_code} 的历史数据...")
+            print(f"请求URL: {url}")
+            
+            resp = requests.get(url=url, headers=headers, timeout=30)
+            
+            if resp.status_code != 200:
+                print(f"请求失败，状态码: {resp.status_code}")
+                return pd.DataFrame()
+                
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                klines = resp_json['data'].get('klines', [])
+                
+                if not klines:
+                    print(f"板块 {sector_code} 无历史数据")
+                    return pd.DataFrame()
+                
+                # 解析K线数据
+                data_list = []
+                for kline in klines:
+                    # K线数据格式：日期,开盘,收盘,最高,最低,成交量,成交额,振幅,涨跌幅,涨跌额,换手率
+                    parts = kline.split(',')
+                    if len(parts) >= 11:
+                        data_list.append({
+                            '日期': parts[0],
+                            '开盘价': float(parts[1]) if parts[1] != '-' else 0,
+                            '收盘价': float(parts[2]) if parts[2] != '-' else 0,
+                            '最高价': float(parts[3]) if parts[3] != '-' else 0,
+                            '最低价': float(parts[4]) if parts[4] != '-' else 0,
+                            '成交量': float(parts[5]) if parts[5] != '-' else 0,
+                            '成交额': float(parts[6]) if parts[6] != '-' else 0,
+                            '振幅': float(parts[7]) if parts[7] != '-' else 0,
+                            '涨跌幅': float(parts[8]) if parts[8] != '-' else 0,
+                            '涨跌额': float(parts[9]) if parts[9] != '-' else 0,
+                            '换手率': float(parts[10]) if parts[10] != '-' else 0
+                        })
+                
+                if data_list:
+                    df = pd.DataFrame(data_list)
+                    # 添加板块信息
+                    df['板块代码'] = sector_code
+                    df['板块类型'] = sector_type
+                    
+                    # 按日期排序
+                    df = df.sort_values('日期').reset_index(drop=True)
+                    
+                    print(f"成功获取板块 {sector_code} 历史数据 {len(df)} 条")
+                    return df
+                else:
+                    print(f"板块 {sector_code} 数据解析失败")
+                    return pd.DataFrame()
+            else:
+                print(f"板块 {sector_code} 响应数据格式错误")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            print(f'获取板块 {sector_code} 历史数据出错：{e}')
+            return pd.DataFrame()
+
+    def get_all_sectors_historical_data(self, sector_type: str = 'industry', 
+                                       trading_days: int = 30, period: str = 'daily', 
+                                       save_dir: str = None, is_incremental: bool = False) -> dict:
+        """
+        批量获取所有板块的历史数据
+        :param sector_type: 板块类型，'industry'行业板块 或 'concept'概念板块
+        :param trading_days: 获取最近多少个交易日，默认30个交易日
+        :param period: 数据周期，'daily'日线 'weekly'周线 'monthly'月线
+        :param save_dir: 保存目录，如果提供则保存CSV文件
+        :param is_incremental: 是否为增量更新模式
+        :return: 包含所有板块数据的字典
+        """
+        print(f"开始批量获取{sector_type}板块历史数据...")
+        
+        # 首先获取所有板块列表
+        if sector_type == 'industry':
+            sectors_df = self.get_industry_data_from_eastmoney()
+            code_col = '行业代码'
+            name_col = '行业名称'
+        else:
+            sectors_df = self.get_concept_data_from_eastmoney()
+            code_col = '概念代码'
+            name_col = '概念名称'
+        
+        if sectors_df.empty:
+            print(f"获取{sector_type}板块列表失败")
+            return {}
+        
+        # 创建保存目录
+        if save_dir:
+            import os
+            os.makedirs(save_dir, exist_ok=True)
+        
+        all_data = {}
+        successful_count = 0
+        total_count = len(sectors_df)
+        
+        print(f"共找到 {total_count} 个{sector_type}板块")
+        
+        for index, row in sectors_df.iterrows():
+            sector_code = row[code_col]
+            sector_name = row[name_col]
+            
+            try:
+                print(f"进度: {index + 1}/{total_count} - 正在获取 {sector_name}({sector_code}) 历史数据...")
+                
+                # 获取历史数据
+                historical_df = self.get_historical_sector_data_from_eastmoney(
+                    sector_code=sector_code,
+                    sector_type=sector_type,
+                    trading_days=trading_days,
+                    period=period,
+                    is_incremental=is_incremental,
+                    save_dir=save_dir if is_incremental else None
+                )
+                
+                if not historical_df.empty:
+                    # 添加板块名称
+                    historical_df['板块名称'] = sector_name
+                    all_data[sector_code] = historical_df
+                    successful_count += 1
+                    
+                    # 保存单个板块数据
+                    if save_dir:
+                        filename = f"{sector_name}({sector_code})_{period}_历史数据.csv"
+                        filepath = os.path.join(save_dir, filename)
+                        historical_df.to_csv(filepath, index=False, encoding='utf-8-sig')
+                        print(f"已保存: {filepath}")
+                    
+                else:
+                    print(f"警告: {sector_name}({sector_code}) 无历史数据")
+                
+                # 添加延迟避免请求过于频繁
+                time.sleep(0.2)
+                
+            except Exception as e:
+                print(f"错误: 获取 {sector_name}({sector_code}) 数据失败: {e}")
+                continue
+        
+        print(f"\n批量获取完成！成功: {successful_count}/{total_count}")
+        
+        # 合并所有数据并保存
+        if all_data and save_dir:
+            try:
+                combined_df = pd.concat(all_data.values(), ignore_index=True)
+                combined_filename = f"所有{sector_type}板块_{period}_历史数据汇总.csv"
+                combined_filepath = os.path.join(save_dir, combined_filename)
+                combined_df.to_csv(combined_filepath, index=False, encoding='utf-8-sig')
+                print(f"已保存汇总文件: {combined_filepath} (共 {len(combined_df)} 条记录)")
+            except Exception as e:
+                print(f"保存汇总文件失败: {e}")
+        
+        return all_data
+
+    def get_sector_fund_flow_history(self, sector_code: str, sector_type: str = 'industry',
+                                   trading_days: int = 5) -> pd.DataFrame:
+        """
+        获取板块资金流向历史数据
+        :param sector_code: 板块代码
+        :param sector_type: 板块类型，'industry'行业板块 或 'concept'概念板块
+        :param trading_days: 获取最近多少个交易日，默认5个交易日
+        :return: 包含资金流向数据的DataFrame
+        """
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36',
+            'Referer': 'http://quote.eastmoney.com/'
+        }
+        
+        try:
+            # 资金流向API
+            if trading_days >= 1000:
+                # 获取全部历史资金流向数据，不限制数量
+                url = f'http://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get?klt=101&secid=90.{sector_code}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63,f64,f65&ut=b2884a393a59ad64002292a3e90d46a5&_={int(time.time() * 1000)}'
+            else:
+                # 获取指定数量的资金流向数据
+                url = f'http://push2his.eastmoney.com/api/qt/stock/fflow/daykline/get?lmt={trading_days}&klt=101&secid=90.{sector_code}&fields1=f1,f2,f3,f7&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61,f62,f63,f64,f65&ut=b2884a393a59ad64002292a3e90d46a5&_={int(time.time() * 1000)}'
+            
+            print(f"正在获取板块 {sector_code} 的资金流向数据...")
+            
+            resp = requests.get(url=url, headers=headers, timeout=30)
+            
+            if resp.status_code != 200:
+                print(f"请求失败，状态码: {resp.status_code}")
+                return pd.DataFrame()
+                
+            resp_json = resp.json()
+            
+            if 'data' in resp_json and resp_json['data'] is not None:
+                klines = resp_json['data'].get('klines', [])
+                
+                if not klines:
+                    print(f"板块 {sector_code} 无资金流向数据")
+                    return pd.DataFrame()
+                
+                # 解析资金流向数据
+                data_list = []
+                for kline in klines:
+                    # 资金流向数据格式：日期,主力净流入,小单净流入,中单净流入,大单净流入,超大单净流入,主力净流入占比,小单净流入占比,中单净流入占比,大单净流入占比,超大单净流入占比,收盘价,涨跌幅
+                    parts = kline.split(',')
+                    if len(parts) >= 12:
+                        data_list.append({
+                            '日期': parts[0],
+                            '主力净流入': float(parts[1]) if parts[1] != '-' else 0,
+                            '小单净流入': float(parts[2]) if parts[2] != '-' else 0,
+                            '中单净流入': float(parts[3]) if parts[3] != '-' else 0,
+                            '大单净流入': float(parts[4]) if parts[4] != '-' else 0,
+                            '超大单净流入': float(parts[5]) if parts[5] != '-' else 0,
+                            '主力净流入占比': float(parts[6]) if parts[6] != '-' else 0,
+                            '小单净流入占比': float(parts[7]) if parts[7] != '-' else 0,
+                            '中单净流入占比': float(parts[8]) if parts[8] != '-' else 0,
+                            '大单净流入占比': float(parts[9]) if parts[9] != '-' else 0,
+                            '超大单净流入占比': float(parts[10]) if parts[10] != '-' else 0,
+                            '收盘价': float(parts[11]) if parts[11] != '-' else 0,
+                            '涨跌幅': float(parts[12]) if len(parts) > 12 and parts[12] != '-' else 0
+                        })
+                
+                if data_list:
+                    df = pd.DataFrame(data_list)
+                    # 添加板块信息
+                    df['板块代码'] = sector_code
+                    df['板块类型'] = sector_type
+                    
+                    # 按日期排序
+                    df = df.sort_values('日期').reset_index(drop=True)
+                    
+                    print(f"成功获取板块 {sector_code} 资金流向数据 {len(df)} 条")
+                    return df
+                else:
+                    print(f"板块 {sector_code} 资金流向数据解析失败")
+                    return pd.DataFrame()
+            else:
+                print(f"板块 {sector_code} 资金流向响应数据格式错误")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            print(f'获取板块 {sector_code} 资金流向数据出错：{e}')
             return pd.DataFrame()
 
     def get_stocks_by_concept_from_eastmoney(self, concept_code: str) -> pd.DataFrame:

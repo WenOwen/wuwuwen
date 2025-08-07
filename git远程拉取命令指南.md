@@ -1,5 +1,15 @@
 # Git 远程拉取命令指南
+#拉取新分支
 
+git fetch --all
+git reset --hard origin/main
+git clean -fd
+
+#暂存拉取
+git stash push -m "暂存文件" 
+git fetch --all
+git reset --hard origin/main
+git stash pop
 ## 基本拉取命令
 
 ### 1. git pull - 拉取并合并
