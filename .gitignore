@@ -3,26 +3,26 @@
 # ===========================================
 
 # 数据目录（最重要！）
-data/
-datas_em/
-datas_QMT/
-datas_index/
-financial_csv/
-stockcode_list/
-get_opening_calendar_from_szse/
+# data/
+# datas_em/
+# datas_QMT/
+# datas_index/
+# financial_csv/
+# stockcode_list/
+# get_opening_calendar_from_szse/
 
 # CSV数据文件
-*.csv
+# *.csv
 
 # 训练好的模型文件
-models/
-*.pkl  
-*.joblib
-*.h5
-*.model
-*.ckpt
-*.pb
-*.onnx
+# models/
+# *.pkl  
+# *.joblib
+# *.h5
+# *.model
+# *.ckpt
+# *.pb
+# *.onnx
 
 # 日志文件
 logs/
