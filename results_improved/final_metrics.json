@@ -1,0 +1,8 @@
+{
+  "best_ic": -Infinity,
+  "final_ic": NaN,
+  "final_rank_ic": NaN,
+  "final_mse": 10.601784706115723,
+  "final_r2": -4.410743713378906e-05,
+  "final_loss": 10.63241548538208
+}

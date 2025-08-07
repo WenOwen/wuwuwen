@@ -1,6 +1,0 @@
-﻿,accuracy,model_type
-LightGBM,0.5526,LightGBM
-LSTM,0.5173,LSTM
-Transformer,0.513,Transformer
-CNN-LSTM,0.5197,CNN-LSTM
-Ensemble,0.5367,Ensemble

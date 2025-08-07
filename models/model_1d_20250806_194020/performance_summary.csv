@@ -1,2 +1,0 @@
-﻿model_name,ensemble_accuracy,cv_accuracy_mean,cv_accuracy_std,feature_count,training_samples,test_samples,total_samples,training_time,gpu_optimized
-model_1d,0.5367,0.5315666666666666,0.0035928942217784508,170,40000,10000,50000,20250806_194020,True
