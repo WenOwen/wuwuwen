@@ -2,19 +2,19 @@
   "X_shape": [
     2430962,
     30,
-    27
+    29
   ],
   "y_shape": [
     2430962
   ],
   "feature_dims": {
-    "stock": 15,
-    "sector": 5,
+    "stock": 16,
+    "sector": 6,
     "index": 5,
     "sentiment": 2,
-    "total": 27
+    "total": 29
   },
   "num_samples": 2430962,
   "num_stocks": 5219,
-  "processing_time": "2025-08-07T20:45:28.404162"
+  "processing_time": "2025-08-09T00:11:16.858128"
 }

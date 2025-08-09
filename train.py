@@ -20,16 +20,25 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-# 导入模型
+# 导入模型和配置
 from model import SiameseLSTMModel, ModelEvaluator
+from config import Config, ConfigPresets
 
+# 应用高性能配置
+ConfigPresets.high_performance()
 
 class ImprovedTrainer:
     """改进的训练器"""
     
-    def __init__(self, data_dir: str = "./data/processed_v2"):
-        self.data_dir = data_dir
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    def __init__(self, config=None):
+        # 使用传入的配置或默认配置
+        if config is None:
+            config = Config.get_all_config()
+        self.config = config
+        
+        # 从配置中获取参数
+        self.data_dir = self.config['data']['data_dir']
+        self.device = torch.device(self.config['device']['device'])
         self.evaluator = ModelEvaluator()
         
         print(f"使用设备: {self.device}")
@@ -59,8 +68,12 @@ class ImprovedTrainer:
         
         return X, y, stock_codes, data_info
     
-    def create_data_loaders(self, X, y, train_ratio=0.8, batch_size=64):
+    def create_data_loaders(self, X, y):
         """创建数据加载器"""
+        # 从配置获取参数
+        train_ratio = self.config['data']['train_ratio']
+        batch_size = self.config['data']['batch_size']
+        
         # 时序数据按时间顺序划分
         split_idx = int(len(X) * train_ratio)
         
@@ -81,21 +94,23 @@ class ImprovedTrainer:
         val_dataset = TensorDataset(X_val_tensor, y_val_tensor)
         
         # 创建数据加载器
-        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        train_loader = DataLoader(
+            train_dataset, 
+            batch_size=batch_size, 
+            shuffle=self.config['data']['shuffle_train']
+        )
         val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
         
         return train_loader, val_loader
     
-    def create_model(self, input_dim=27):
+    def create_model(self, input_dim=None):
         """创建模型"""
-        model = SiameseLSTMModel(
-            input_dim=input_dim,
-            hidden_dim=64,  # 增加隐藏层维度
-            num_layers=2,
-            dropout=0.3,
-            output_dim=1,
-            task_type='regression'
-        ).to(self.device)
+        # 从配置获取模型参数
+        model_config = self.config['model'].copy()
+        if input_dim is not None:
+            model_config['input_dim'] = input_dim
+            
+        model = SiameseLSTMModel(**model_config).to(self.device)
         
         total_params = sum(p.numel() for p in model.parameters())
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -123,7 +138,9 @@ class ImprovedTrainer:
             loss.backward()
             
             # 梯度裁剪
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            clip_norm = self.config['training']['gradient_clip_norm']
+            if clip_norm > 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=clip_norm)
             
             optimizer.step()
             
@@ -131,7 +148,8 @@ class ImprovedTrainer:
             predictions.extend(output.squeeze().detach().cpu().numpy())
             targets.extend(y_batch.cpu().numpy())
             
-            if batch_idx % 100 == 0:
+            log_interval = self.config['output']['log_interval']
+            if batch_idx % log_interval == 0:
                 print(f"  Batch {batch_idx}/{len(train_loader)}, Loss: {loss.item():.6f}")
         
         avg_loss = total_loss / len(train_loader)
@@ -177,18 +195,50 @@ class ImprovedTrainer:
             'targets': targets
         }
     
-    def train_model(self, model, train_loader, val_loader, num_epochs=20):
+    def train_model(self, model, train_loader, val_loader):
         """训练模型"""
         print("开始训练模型...")
         
-        # 优化器和学习率调度器
-        optimizer = optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=1e-6)
+        # 从配置获取训练参数
+        train_config = self.config['training']
+        num_epochs = train_config['num_epochs']
+        
+        # 优化器
+        optimizer = optim.AdamW(
+            model.parameters(), 
+            lr=train_config['learning_rate'], 
+            weight_decay=train_config['weight_decay']
+        )
+        
+        # 学习率调度器
+        scheduler_type = train_config['scheduler_type']
+        if scheduler_type == 'cosine':
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, 
+                T_max=num_epochs, 
+                eta_min=train_config['scheduler_params']['eta_min']
+            )
+        elif scheduler_type == 'step':
+            scheduler = optim.lr_scheduler.StepLR(
+                optimizer,
+                step_size=train_config['scheduler_params']['step_size'],
+                gamma=train_config['scheduler_params']['gamma']
+            )
+        elif scheduler_type == 'plateau':
+            scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                factor=train_config['scheduler_params']['factor'],
+                patience=train_config['scheduler_params']['patience']
+            )
+        else:
+            scheduler = None
+        
+        # 损失函数
         criterion = nn.MSELoss()
         
-        # 早停
+        # 早停配置
         best_ic = -float('inf')
-        patience = 5
+        patience = train_config['patience']
         patience_counter = 0
         best_model_state = None
         
@@ -206,7 +256,11 @@ class ImprovedTrainer:
             val_metrics = self.validate_epoch(model, val_loader, criterion)
             
             # 更新学习率
-            scheduler.step()
+            if scheduler is not None:
+                if scheduler_type == 'plateau':
+                    scheduler.step(val_metrics['loss'])
+                else:
+                    scheduler.step()
             current_lr = optimizer.param_groups[0]['lr']
             
             # 记录历史
@@ -354,8 +408,10 @@ class ImprovedTrainer:
         
         plt.show()
     
-    def save_results(self, results, save_dir="./results_improved"):
+    def save_results(self, results, save_dir=None):
         """保存训练结果"""
+        if save_dir is None:
+            save_dir = self.config['output']['results_dir']
         os.makedirs(save_dir, exist_ok=True)
         
         # 保存模型
@@ -400,27 +456,27 @@ def main():
     X, y, stock_codes, data_info = trainer.load_data()
     
     # 创建数据加载器
-    train_loader, val_loader = trainer.create_data_loaders(X, y, batch_size=128)
+    train_loader, val_loader = trainer.create_data_loaders(X, y)
     
     # 创建模型
     input_dim = data_info['feature_dims']['total']
     model = trainer.create_model(input_dim=input_dim)
     
     # 训练模型
-    results = trainer.train_model(model, train_loader, val_loader, num_epochs=30)
+    results = trainer.train_model(model, train_loader, val_loader)
     
     # 绘制训练历史
     trainer.plot_training_history(
         results['train_history'], 
         results['val_history'],
-        save_path="./results_improved/training_history.png"
+        save_path=os.path.join(trainer.config['output']['results_dir'], "training_history.png")
     )
     
     # 分析预测结果
     trainer.analyze_predictions(
         results['final_metrics']['predictions'],
         results['final_metrics']['targets'],
-        save_path="./results_improved/prediction_analysis.png"
+        save_path=os.path.join(trainer.config['output']['results_dir'], "prediction_analysis.png")
     )
     
     # 保存结果

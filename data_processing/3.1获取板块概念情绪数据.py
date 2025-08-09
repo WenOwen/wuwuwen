@@ -20,10 +20,10 @@ sys.path.append(os.path.join(project_root, 'core'))
 
 # 导入量化函数
 try:
-    from samequant_functions import Spider_func
+    from data_processing.samequant_functions_new import OptimizedSpiderFunc as Spider_func
 except ImportError as e:
     print(f"❌ 无法导入samequant_functions: {str(e)}")
-    print("请确保samequant_functions.py在项目根目录")
+    print("请确保samequant_functions_new.py在项目根目录")
     sys.exit(1)
 
 # 配置日志
@@ -45,7 +45,7 @@ def get_real_sector_data():
     # 1. 获取行业板块数据
     logger.info("📊 获取行业板块数据...")
     try:
-        df_industry = s_f_1.get_industry_data_from_eastmoney(sort_field='f3')
+        df_industry = s_f_1.get_industry_data(sort_field='f3')
         if not df_industry.empty:
             industry_file = os.path.join(save_dir, "行业板块数据.csv")
             df_industry.to_csv(industry_file, index=False, encoding='utf-8-sig')
@@ -61,7 +61,7 @@ def get_real_sector_data():
     # 2. 获取概念板块数据（完整的438个概念板块）
     logger.info("📊 获取完整概念板块数据...")
     try:
-        df_concept = s_f_1.get_concept_data_from_eastmoney(sort_field='f3')
+        df_concept = s_f_1.get_concept_data(sort_field='f3')
         if not df_concept.empty:
             concept_file = os.path.join(save_dir, "概念板块数据.csv")
             df_concept.to_csv(concept_file, index=False, encoding='utf-8-sig')
@@ -648,7 +648,7 @@ def smart_incremental_update():
     # 1. 检查并更新行业板块数据
     logger.info("🔍 检查行业板块数据...")
     try:
-        industry_df = s_f_1.get_industry_data_from_eastmoney()
+        industry_df = s_f_1.get_industry_data()
         if not industry_df.empty:
             update_count = 0
             skip_count = 0
@@ -712,7 +712,7 @@ def smart_incremental_update():
     # 2. 检查并更新概念板块数据
     logger.info("🔍 检查概念板块数据...")
     try:
-        concept_df = s_f_1.get_concept_data_from_eastmoney()
+        concept_df = s_f_1.get_concept_data()
         if not concept_df.empty:
             update_count = 0
             skip_count = 0

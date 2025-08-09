@@ -150,10 +150,10 @@ class ImprovedDataProcessor:
                 # 计算技术指标
                 df = self._calculate_technical_indicators(df)
                 
-                # 选择个股特征（15维）
+                # 选择个股特征（16维）
                 feature_cols = [
                     '开盘价', '收盘价', '最高价', '最低价', '成交量', 
-                    '涨跌幅', '换手率', 'RSI', 'MACD', 'MACD_signal', 
+                    '涨跌幅', '换手率', '流通市值', 'RSI', 'MACD', 'MACD_signal', 
                     'BB_upper', 'BB_middle', 'BB_lower', 'ATR', 'ROC'
                 ]
                 
@@ -161,13 +161,13 @@ class ImprovedDataProcessor:
                 available_cols = [col for col in feature_cols if col in df.columns]
                 df_selected = df[available_cols].copy()
                 
-                # 确保15维，不足的用0填充
-                while len(df_selected.columns) < 15:
+                # 确保16维，不足的用0填充
+                while len(df_selected.columns) < 16:
                     df_selected[f'feature_{len(df_selected.columns)}'] = 0
                 
-                # 超过15维则截取前15维
-                if len(df_selected.columns) > 15:
-                    df_selected = df_selected.iloc[:, :15]
+                # 超过16维则截取前16维
+                if len(df_selected.columns) > 16:
+                    df_selected = df_selected.iloc[:, :16]
                 
                 stock_data_dict[stock_code] = df_selected
                 
@@ -270,19 +270,19 @@ class ImprovedDataProcessor:
                 df = df.drop_duplicates(subset=['日期']).sort_values('日期')
                 df = df.set_index('日期')
                 
-                # 选择行业特征（5维：OHLCV）
-                feature_cols = ['开盘价', '收盘价', '最高价', '最低价', '成交量']
+                # 选择行业特征（6维：OHLCV + 涨跌幅）
+                feature_cols = ['开盘价', '收盘价', '最高价', '最低价', '成交量', '涨跌幅']
                 available_cols = [col for col in feature_cols if col in df.columns]
                 
                 if len(available_cols) >= 4:  # 至少要有OHLC
                     df_selected = df[available_cols].copy()
                     
-                    # 确保5维
-                    while len(df_selected.columns) < 5:
+                    # 确保6维
+                    while len(df_selected.columns) < 6:
                         df_selected[f'sector_feature_{len(df_selected.columns)}'] = 0
                     
-                    if len(df_selected.columns) > 5:
-                        df_selected = df_selected.iloc[:, :5]
+                    if len(df_selected.columns) > 6:
+                        df_selected = df_selected.iloc[:, :6]
                     
                     sector_data_dict[sector_name] = df_selected
                     
@@ -473,9 +473,9 @@ class ImprovedDataProcessor:
                     else:
                         # 创建空的行业数据
                         sector_df = pd.DataFrame(
-                            np.zeros((len(stock_df), 5)),
+                            np.zeros((len(stock_df), 6)),
                             index=stock_df.index,
-                            columns=[f'sector_feature_{i}' for i in range(5)]
+                            columns=[f'sector_feature_{i}' for i in range(6)]
                         )
                 
                 # 数据对齐
@@ -498,16 +498,16 @@ class ImprovedDataProcessor:
                     window_start = i
                     window_end = i + window_size
                     
-                    # 拼接特征：个股(15) + 行业(5) + 指数(5) + 情绪(2) = 27维
-                    stock_window = stock_aligned.iloc[window_start:window_end].values  # (30, 15)
-                    sector_window = sector_aligned.iloc[window_start:window_end].values  # (30, 5)
+                    # 拼接特征：个股(16) + 行业(6) + 指数(5) + 情绪(2) = 29维
+                    stock_window = stock_aligned.iloc[window_start:window_end].values  # (30, 16)
+                    sector_window = sector_aligned.iloc[window_start:window_end].values  # (30, 6)
                     index_window = index_aligned.iloc[window_start:window_end].values  # (30, 5)
                     sentiment_window = sentiment_aligned.iloc[window_start:window_end].values  # (30, 2)
                     
                     # 合并特征
                     combined_window = np.hstack([
                         stock_window, sector_window, index_window, sentiment_window
-                    ])  # (30, 27)
+                    ])  # (30, 29)
                     
                     # 目标：下一天的股票收益率
                     target_idx = window_end
@@ -537,17 +537,39 @@ class ImprovedDataProcessor:
         y = np.array(all_targets)
         
         print(f"生成训练样本: X={X.shape}, y={y.shape}")
-        print(f"特征维度: 个股(15) + 行业(5) + 指数(5) + 情绪(2) = {X.shape[-1]}维")
+        print(f"特征维度: 个股(16) + 行业(6) + 指数(5) + 情绪(2) = {X.shape[-1]}维")
         print(f"样本统计: 涉及{len(set(all_stock_codes))}只股票")
         
         return X, y, all_stock_codes
     
     def save_processed_data(self, X: np.ndarray, y: np.ndarray, 
-                           stock_codes: List[str], save_dir: str = "./data/processed_v2") -> None:
-        """保存处理后的数据"""
+                       stock_codes: List[str], save_base_dir: str = "./data/processed", 
+                       create_unique_folder: bool = True) -> str:
+        """保存处理后的数据
+        
+        Args:
+            X: 特征数据
+            y: 目标数据  
+            stock_codes: 股票代码列表
+            save_base_dir: 基础保存目录
+            create_unique_folder: 是否创建唯一标识文件夹
+            
+        Returns:
+            str: 实际保存路径
+        """
+        
+        if create_unique_folder:
+            # 创建唯一标识符：时间戳 + 股票数量
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            unique_stocks = len(set(stock_codes))
+            folder_name = f"processed_{timestamp}_stocks{unique_stocks}"
+            save_dir = os.path.join(save_base_dir, folder_name)
+        else:
+            save_dir = save_base_dir
+        
         os.makedirs(save_dir, exist_ok=True)
         
-        print("正在保存处理后的数据...")
+        print(f"正在保存处理后的数据到: {save_dir}")
         
         # 保存numpy数组
         np.save(os.path.join(save_dir, "X_features.npy"), X)
@@ -562,26 +584,71 @@ class ImprovedDataProcessor:
             'X_shape': X.shape,
             'y_shape': y.shape,
             'feature_dims': {
-                'stock': 15,
-                'sector': 5,
+                'stock': 16,
+                'sector': 6,
                 'index': 5,
                 'sentiment': 2,
                 'total': X.shape[-1]
             },
             'num_samples': X.shape[0],
             'num_stocks': len(set(stock_codes)),
-            'processing_time': datetime.now().isoformat()
+            'processing_time': datetime.now().isoformat(),
+            'save_path': save_dir,
+            'folder_name': os.path.basename(save_dir) if create_unique_folder else 'default'
         }
         
         with open(os.path.join(save_dir, "data_info.json"), 'w', encoding='utf-8') as f:
             json.dump(info, f, indent=2, ensure_ascii=False)
         
-        print(f"数据已保存到: {save_dir}")
-        print("保存的文件:")
+        # 创建一个README文件说明数据内容
+        readme_content = f"""# 股票数据处理结果
+
+## 处理信息
+- 处理时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- 股票数量: {len(set(stock_codes))} 只
+- 样本数量: {X.shape[0]:,} 个
+- 特征维度: {X.shape[-1]} 维
+
+## 文件说明
+- `X_features.npy`: 特征数据，形状 {X.shape}
+- `y_targets.npy`: 目标数据（收益率），形状 {y.shape}
+- `stock_codes.json`: 对应的股票代码列表
+- `data_info.json`: 详细的数据信息和元数据
+- `README.md`: 本说明文件
+
+## 特征构成
+- 个股特征: 16 维 (OHLCV + 技术指标等)
+- 行业特征: 6 维 (所属行业的OHLCV等)
+- 指数特征: 5 维 (主要市场指数)
+- 情绪特征: 2 维 (涨停强度、连板强度)
+
+## 使用方法
+```python
+import numpy as np
+import json
+
+# 加载数据
+X = np.load('X_features.npy')
+y = np.load('y_targets.npy')
+
+# 加载股票代码
+with open('stock_codes.json', 'r', encoding='utf-8') as f:
+    stock_codes = json.load(f)
+```
+"""
+        
+        with open(os.path.join(save_dir, "README.md"), 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+        
+        print(f"✅ 数据已成功保存到: {save_dir}")
+        print("📁 保存的文件:")
         print("  - X_features.npy: 特征数据")
         print("  - y_targets.npy: 目标数据")
         print("  - stock_codes.json: 股票代码列表")
         print("  - data_info.json: 数据信息")
+        print("  - README.md: 说明文档")
+        
+        return save_dir
 
 
 def main(limit_stocks=None):
@@ -629,13 +696,13 @@ def main(limit_stocks=None):
         
         # 6. 保存处理后的数据
         print(f"\n🔄 步骤6/6: 保存处理后的数据...")
-        processor.save_processed_data(X, y, stock_codes)
+        save_dir = processor.save_processed_data(X, y, stock_codes)
         
         print("\n改进的数据处理完成！")
         print(f"最终数据形状:")
         print(f"  特征数据: {X.shape}")
         print(f"  目标数据: {y.shape}")
-        print(f"  特征维度: {X.shape[-1]} (个股15 + 行业5 + 指数5 + 情绪2)")
+        print(f"  特征维度: {X.shape[-1]} (个股16 + 行业6 + 指数5 + 情绪2)")
         print(f"  涉及股票: {len(set(stock_codes))} 只")
         
         # 数据统计
