@@ -1,7 +1,0 @@
-{
-  "learning_curves": "results/lightgbm_direction/direction_training_007/learning_curves.png",
-  "confusion_matrix_train": "results/lightgbm_direction/direction_training_007/confusion_matrix_train.png",
-  "confusion_matrix_val": "results/lightgbm_direction/direction_training_007/confusion_matrix_val.png",
-  "confusion_matrix_test": "results/lightgbm_direction/direction_training_007/confusion_matrix_test.png",
-  "prediction_analysis": "results/lightgbm_direction/direction_training_007/prediction_analysis.png"
-}

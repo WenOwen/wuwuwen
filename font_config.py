@@ -1,150 +1,230 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-统一的中文字体配置模块
-确保所有可视化脚本都能正确显示中文
+中文字体配置模块
+解决matplotlib中文显示乱码问题
 """
 
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 import os
+import sys
+import platform
 import warnings
-
-warnings.filterwarnings('ignore')
-
-class ChineseFontConfig:
-    """中文字体配置管理器"""
-    
-    def __init__(self):
-        self.font_initialized = False
-        
-    def setup_chinese_font(self):
-        """设置中文字体，适用于Linux系统"""
-        if self.font_initialized:
-            return True
-            
-        try:
-            # 强制使用非交互式后端
-            matplotlib.use('Agg')
-            
-            # Linux系统中常见的中文字体路径
-            font_paths = [
-                '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-                '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc', 
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-                '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
-            ]
-            
-            # 尝试添加系统中的中文字体
-            added_fonts = []
-            for font_path in font_paths:
-                if os.path.exists(font_path):
-                    try:
-                        fm.fontManager.addfont(font_path)
-                        added_fonts.append(font_path)
-                    except Exception:
-                        continue
-            
-            # 重建字体缓存（兼容不同版本的matplotlib）
-            if added_fonts:
-                try:
-                    fm._rebuild()
-                except AttributeError:
-                    # 新版本matplotlib使用不同的方法
-                    try:
-                        fm.fontManager.__init__()
-                    except:
-                        pass
-            
-            # 获取可用的中文字体
-            available_fonts = [f.name for f in fm.fontManager.ttflist]
-            
-            # 优先选择的中文字体列表
-            preferred_fonts = [
-                'WenQuanYi Micro Hei',
-                'WenQuanYi Zen Hei', 
-                'Noto Sans CJK SC',
-                'AR PL UMing CN',
-                'AR PL UKai CN',
-                'DejaVu Sans',
-                'Liberation Sans'
-            ]
-            
-            # 选择第一个可用的字体
-            selected_font = 'DejaVu Sans'  # 默认字体
-            for font in preferred_fonts:
-                if font in available_fonts:
-                    selected_font = font
-                    break
-            
-            # 设置matplotlib参数
-            plt.rcParams['font.sans-serif'] = [selected_font, 'DejaVu Sans']
-            plt.rcParams['axes.unicode_minus'] = False
-            plt.rcParams['font.family'] = 'sans-serif'
-            
-            # 设置图表样式
-            plt.rcParams['figure.figsize'] = (12, 8)
-            plt.rcParams['figure.dpi'] = 100
-            plt.rcParams['savefig.dpi'] = 300
-            plt.rcParams['savefig.bbox'] = 'tight'
-            plt.rcParams['savefig.facecolor'] = 'white'
-            plt.rcParams['savefig.edgecolor'] = 'none'
-            
-            self.font_initialized = True
-            print(f"中文字体配置成功，使用字体: {selected_font}")
-            return True
-            
-        except Exception as e:
-            print(f"字体配置失败: {e}")
-            # 使用备用配置
-            plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
-            plt.rcParams['axes.unicode_minus'] = False
-            plt.rcParams['font.family'] = 'sans-serif'
-            return False
-    
-    def get_font_info(self):
-        """获取当前字体信息"""
-        current_font = plt.rcParams['font.sans-serif'][0]
-        return {
-            'current_font': current_font,
-            'font_family': plt.rcParams['font.family'],
-            'unicode_minus': plt.rcParams['axes.unicode_minus']
-        }
-
-# 创建全局字体配置实例
-font_config = ChineseFontConfig()
+from pathlib import Path
 
 def setup_chinese_plot():
-    """快捷函数：设置中文绘图环境"""
-    return font_config.setup_chinese_font()
+    """
+    设置matplotlib支持中文显示
+    自动检测系统并配置合适的中文字体
+    """
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+        from matplotlib.font_manager import FontProperties, fontManager
+        import matplotlib.font_manager as fm
+        
+        # 禁用字体相关警告
+        warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib.font_manager')
+        
+        # 设置matplotlib后端（避免GUI问题）
+        matplotlib.use('Agg')
+        
+        # 清理字体缓存
+        try:
+            fontManager.findfont(fontManager.fontManager.defaultFont[0], rebuild_if_missing=True)
+        except:
+            pass
+        
+        # 检测操作系统并设置对应的中文字体
+        system = platform.system()
+        
+        font_candidates = []
+        font_paths = []
+        
+        if system == "Windows":
+            # Windows系统常见中文字体及其路径
+            windows_fonts_dir = os.path.join(os.environ.get('WINDIR', 'C:\\Windows'), 'Fonts')
+            font_candidates = [
+                ('Microsoft YaHei', 'msyh.ttc'),      # 微软雅黑
+                ('SimHei', 'simhei.ttf'),             # 黑体
+                ('SimSun', 'simsun.ttc'),             # 宋体
+                ('KaiTi', 'kaiti.ttf'),               # 楷体
+                ('FangSong', 'simfang.ttf'),          # 仿宋
+                ('Microsoft YaHei UI', 'msyhbd.ttc'), # 微软雅黑UI
+            ]
+            
+            # 检查字体文件是否存在
+            for font_name, font_file in font_candidates:
+                font_path = os.path.join(windows_fonts_dir, font_file)
+                if os.path.exists(font_path):
+                    font_paths.append((font_name, font_path))
+        
+        elif system == "Darwin":  # macOS
+            # macOS系统中文字体
+            font_candidates = [
+                'PingFang SC',          # 苹方
+                'Hiragino Sans GB',     # 冬青黑体
+                'STHeiti',              # 华文黑体
+                'Arial Unicode MS'
+            ]
+        else:  # Linux
+            # Linux系统中文字体
+            font_candidates = [
+                'WenQuanYi Micro Hei',  # 文泉驿微米黑
+                'WenQuanYi Zen Hei',    # 文泉驿正黑
+                'Noto Sans CJK SC',     # 思源黑体
+                'Source Han Sans CN',   # 思源黑体
+                'DejaVu Sans'
+            ]
+        
+        # 方法1：尝试直接使用字体文件路径（Windows）
+        chinese_font = None
+        if font_paths:
+            for font_name, font_path in font_paths:
+                try:
+                    # 将字体添加到matplotlib
+                    fm.fontManager.addfont(font_path)
+                    # 获取字体属性
+                    prop = fm.FontProperties(fname=font_path)
+                    font_family = prop.get_name()
+                    
+                    chinese_font = font_family
+                    print(f"✅ 通过文件路径设置中文字体成功: {font_name} ({font_family})")
+                    break
+                except Exception as e:
+                    print(f"   字体 {font_name} 设置失败: {e}")
+                    continue
+        
+        # 方法2：使用字体名称查找
+        if not chinese_font:
+            # 获取所有可用字体
+            available_fonts = [f.name for f in fm.fontManager.ttflist]
+            print(f"   系统字体总数: {len(available_fonts)}")
+            
+            # 查找中文字体
+            for font in font_candidates if not font_paths else [name for name, _ in font_candidates]:
+                if font in available_fonts:
+                    chinese_font = font
+                    print(f"✅ 通过字体名称找到中文字体: {font}")
+                    break
+            
+            # 如果没找到预设字体，尝试查找任何包含中文的字体
+            if not chinese_font:
+                chinese_keywords = ['微软雅黑', 'yahei', 'chinese', 'cjk', 'han', 'hei', 'song', 'kai', 'fang', 'simhei', 'simsun']
+                for font in available_fonts:
+                    if any(keyword in font.lower() for keyword in chinese_keywords):
+                        chinese_font = font
+                        print(f"✅ 找到包含中文关键词的字体: {font}")
+                        break
+        
+        # 方法3：强制设置常用字体组合
+        if chinese_font:
+            plt.rcParams['font.sans-serif'] = [chinese_font] + ['Arial', 'DejaVu Sans', 'Liberation Sans', 'sans-serif']
+        else:
+            # 使用多个备选字体
+            plt.rcParams['font.sans-serif'] = [
+                'Microsoft YaHei', 'SimHei', 'SimSun', 'KaiTi', 'FangSong',  # Windows
+                'PingFang SC', 'Hiragino Sans GB', 'STHeiti',  # macOS
+                'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei', 'Noto Sans CJK SC',  # Linux
+                'Arial Unicode MS', 'Arial', 'DejaVu Sans', 'Liberation Sans'  # 通用
+            ]
+            print("⚠️ 使用字体列表备选方案")
+        
+        # 设置负号正常显示
+        plt.rcParams['axes.unicode_minus'] = False
+        
+        # 强制刷新字体缓存
+        try:
+            fm.fontManager._rebuild()
+            # 清除matplotlib内部缓存
+            if hasattr(plt, '_original_font_manager'):
+                plt._original_font_manager = None
+        except:
+            pass
+        
+        # 其他图表样式设置
+        plt.rcParams['figure.figsize'] = [10, 6]
+        plt.rcParams['figure.dpi'] = 150
+        plt.rcParams['savefig.dpi'] = 300
+        plt.rcParams['savefig.bbox'] = 'tight'
+        plt.rcParams['savefig.pad_inches'] = 0.1
+        
+        # 设置图表样式
+        plt.style.use('default')
+        
+        # 重新应用字体设置
+        if chinese_font:
+            plt.rcParams['font.sans-serif'] = [chinese_font] + ['Arial', 'DejaVu Sans', 'Liberation Sans', 'sans-serif']
+        
+        # 输出当前字体配置
+        print(f"   当前字体设置: {plt.rcParams['font.sans-serif'][:3]}")
+        print(f"   实际使用的字体: {fm.findfont(fm.FontProperties())}")
+        
+        return True
+        
+    except ImportError as e:
+        print(f"⚠️ 导入matplotlib失败: {e}")
+        return False
+    except Exception as e:
+        print(f"⚠️ 字体配置失败: {e}")
+        import traceback
+        print(f"   详细错误: {traceback.format_exc()}")
+        return False
 
-def get_plot_font_info():
-    """快捷函数：获取绘图字体信息"""
-    return font_config.get_font_info()
 
-# 自动初始化（导入时自动设置字体）
-if __name__ != "__main__":
-    setup_chinese_plot()
+def get_chinese_font():
+    """
+    获取中文字体对象
+    """
+    try:
+        import matplotlib.font_manager as fm
+        
+        # 获取当前设置的字体
+        current_font = fm.FontProperties()
+        return current_font
+    except:
+        return None
+
+
+def test_chinese_display():
+    """
+    测试中文显示是否正常
+    """
+    try:
+        import matplotlib.pyplot as plt
+        import numpy as np
+        
+        # 创建测试图表
+        fig, ax = plt.subplots(figsize=(8, 6))
+        
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x)
+        
+        ax.plot(x, y, label='正弦函数')
+        ax.set_title('中文显示测试图表')
+        ax.set_xlabel('横轴标签')
+        ax.set_ylabel('纵轴标签')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        
+        # 保存测试图片
+        test_path = Path('./test_chinese_font.png')
+        plt.savefig(test_path, dpi=150, bbox_inches='tight')
+        plt.close()
+        
+        print(f"✅ 中文显示测试完成，图片保存至: {test_path}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ 中文显示测试失败: {e}")
+        return False
+
 
 if __name__ == "__main__":
-    # 测试字体配置
-    setup_chinese_plot()
-    print("字体配置信息:", get_plot_font_info())
+    print("🔧 正在配置中文字体...")
+    success = setup_chinese_plot()
     
-    # 测试中文显示
-    import numpy as np
-    
-    plt.figure(figsize=(10, 6))
-    x = np.linspace(0, 10, 100)
-    y = np.sin(x)
-    
-    plt.plot(x, y, label='正弦曲线')
-    plt.title('中文字体测试 - 正弦函数图')
-    plt.xlabel('X轴 (横坐标)')
-    plt.ylabel('Y轴 (纵坐标)')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.savefig('font_test.png')
-    print("字体测试图片已保存为 font_test.png")
+    if success:
+        print("\n🧪 运行中文显示测试...")
+        test_chinese_display()
+    else:
+        print("❌ 字体配置失败")
