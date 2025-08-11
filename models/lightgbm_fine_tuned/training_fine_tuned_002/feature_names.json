@@ -1,0 +1,3057 @@
+{
+  "feature_names": [
+    "step_00_个股_最高价",
+    "step_00_个股_涨跌幅",
+    "step_00_个股_成交额",
+    "step_00_个股_换手率",
+    "step_00_个股_振幅",
+    "step_00_个股_流通市值",
+    "step_00_个股_RSI",
+    "step_00_个股_MACD_signal",
+    "step_00_行业_最低价",
+    "step_00_行业_成交量",
+    "step_00_行业_涨跌幅",
+    "step_00_指数_上证指数",
+    "step_00_指数_沪深300",
+    "step_00_指数_创业板指",
+    "step_00_指数_中证500",
+    "step_00_情绪_sentiment_0",
+    "step_00_情绪_sentiment_1",
+    "step_01_个股_成交量",
+    "step_01_个股_涨跌幅",
+    "step_01_个股_成交额",
+    "step_01_个股_换手率",
+    "step_01_个股_振幅",
+    "step_01_个股_RSI",
+    "step_01_个股_MACD",
+    "step_01_个股_MACD_signal",
+    "step_01_行业_成交量",
+    "step_01_行业_涨跌幅",
+    "step_01_指数_上证指数",
+    "step_01_指数_创业板指",
+    "step_01_指数_中证500",
+    "step_01_情绪_sentiment_0",
+    "step_01_情绪_sentiment_1",
+    "step_02_个股_涨跌幅",
+    "step_02_个股_换手率",
+    "step_02_个股_振幅",
+    "step_02_个股_RSI",
+    "step_02_个股_MACD",
+    "step_02_个股_MACD_signal",
+    "step_02_行业_成交量",
+    "step_02_行业_涨跌幅",
+    "step_02_指数_上证指数",
+    "step_02_指数_沪深300",
+    "step_02_指数_创业板指",
+    "step_02_指数_中证500",
+    "step_02_情绪_sentiment_0",
+    "step_02_情绪_sentiment_1",
+    "step_03_个股_成交量",
+    "step_03_个股_涨跌幅",
+    "step_03_个股_成交额",
+    "step_03_个股_换手率",
+    "step_03_个股_振幅",
+    "step_03_个股_RSI",
+    "step_03_个股_MACD_signal",
+    "step_03_行业_最低价",
+    "step_03_行业_成交量",
+    "step_03_行业_涨跌幅",
+    "step_03_指数_上证指数",
+    "step_03_指数_沪深300",
+    "step_03_指数_创业板指",
+    "step_03_指数_中证500",
+    "step_03_情绪_sentiment_0",
+    "step_03_情绪_sentiment_1",
+    "step_04_个股_成交量",
+    "step_04_个股_涨跌幅",
+    "step_04_个股_成交额",
+    "step_04_个股_换手率",
+    "step_04_个股_振幅",
+    "step_04_个股_RSI",
+    "step_04_个股_MACD_signal",
+    "step_04_行业_成交量",
+    "step_04_行业_涨跌幅",
+    "step_04_指数_上证指数",
+    "step_04_指数_沪深300",
+    "step_04_指数_创业板指",
+    "step_04_指数_中证500",
+    "step_04_情绪_sentiment_0",
+    "step_04_情绪_sentiment_1",
+    "step_05_个股_成交量",
+    "step_05_个股_涨跌幅",
+    "step_05_个股_成交额",
+    "step_05_个股_换手率",
+    "step_05_个股_振幅",
+    "step_05_个股_RSI",
+    "step_05_个股_MACD",
+    "step_05_行业_成交量",
+    "step_05_行业_涨跌幅",
+    "step_05_指数_上证指数",
+    "step_05_指数_沪深300",
+    "step_05_指数_创业板指",
+    "step_05_情绪_sentiment_0",
+    "step_05_情绪_sentiment_1",
+    "step_06_个股_涨跌幅",
+    "step_06_个股_成交额",
+    "step_06_个股_换手率",
+    "step_06_个股_振幅",
+    "step_06_个股_RSI",
+    "step_06_行业_最高价",
+    "step_06_行业_成交量",
+    "step_06_行业_涨跌幅",
+    "step_06_指数_上证指数",
+    "step_06_指数_沪深300",
+    "step_06_指数_创业板指",
+    "step_06_情绪_sentiment_0",
+    "step_06_情绪_sentiment_1",
+    "step_07_个股_涨跌幅",
+    "step_07_个股_成交额",
+    "step_07_个股_换手率",
+    "step_07_个股_振幅",
+    "step_07_个股_RSI",
+    "step_07_个股_MACD",
+    "step_07_行业_成交量",
+    "step_07_行业_涨跌幅",
+    "step_07_指数_上证指数",
+    "step_07_指数_沪深300",
+    "step_07_指数_深证成指",
+    "step_07_情绪_sentiment_0",
+    "step_07_情绪_sentiment_1",
+    "step_08_个股_成交量",
+    "step_08_个股_涨跌幅",
+    "step_08_个股_成交额",
+    "step_08_个股_换手率",
+    "step_08_个股_振幅",
+    "step_08_个股_RSI",
+    "step_08_个股_MACD",
+    "step_08_行业_成交量",
+    "step_08_行业_涨跌幅",
+    "step_08_指数_上证指数",
+    "step_08_指数_沪深300",
+    "step_08_指数_深证成指",
+    "step_08_情绪_sentiment_0",
+    "step_08_情绪_sentiment_1",
+    "step_09_个股_成交量",
+    "step_09_个股_涨跌幅",
+    "step_09_个股_成交额",
+    "step_09_个股_换手率",
+    "step_09_个股_振幅",
+    "step_09_个股_RSI",
+    "step_09_个股_MACD",
+    "step_09_个股_MACD_signal",
+    "step_09_行业_成交量",
+    "step_09_行业_涨跌幅",
+    "step_09_指数_上证指数",
+    "step_09_指数_沪深300",
+    "step_09_指数_深证成指",
+    "step_09_情绪_sentiment_0",
+    "step_09_情绪_sentiment_1",
+    "step_10_个股_成交量",
+    "step_10_个股_涨跌幅",
+    "step_10_个股_成交额",
+    "step_10_个股_换手率",
+    "step_10_个股_振幅",
+    "step_10_个股_RSI",
+    "step_10_个股_MACD",
+    "step_10_个股_MACD_signal",
+    "step_10_行业_开盘价",
+    "step_10_行业_成交量",
+    "step_10_行业_涨跌幅",
+    "step_10_指数_上证指数",
+    "step_10_指数_沪深300",
+    "step_10_指数_深证成指",
+    "step_10_情绪_sentiment_0",
+    "step_10_情绪_sentiment_1",
+    "step_11_个股_成交量",
+    "step_11_个股_涨跌幅",
+    "step_11_个股_成交额",
+    "step_11_个股_换手率",
+    "step_11_个股_振幅",
+    "step_11_个股_流通市值",
+    "step_11_个股_RSI",
+    "step_11_个股_MACD",
+    "step_11_个股_MACD_signal",
+    "step_11_行业_成交量",
+    "step_11_行业_涨跌幅",
+    "step_11_指数_上证指数",
+    "step_11_指数_中证500",
+    "step_11_情绪_sentiment_0",
+    "step_11_情绪_sentiment_1",
+    "step_12_个股_成交量",
+    "step_12_个股_涨跌幅",
+    "step_12_个股_成交额",
+    "step_12_个股_换手率",
+    "step_12_个股_振幅",
+    "step_12_个股_RSI",
+    "step_12_个股_MACD_signal",
+    "step_12_行业_最高价",
+    "step_12_行业_成交量",
+    "step_12_行业_涨跌幅",
+    "step_12_指数_沪深300",
+    "step_12_指数_深证成指",
+    "step_12_情绪_sentiment_0",
+    "step_12_情绪_sentiment_1",
+    "step_13_个股_成交量",
+    "step_13_个股_涨跌幅",
+    "step_13_个股_成交额",
+    "step_13_个股_换手率",
+    "step_13_个股_振幅",
+    "step_13_个股_RSI",
+    "step_13_行业_成交量",
+    "step_13_行业_涨跌幅",
+    "step_13_指数_上证指数",
+    "step_13_指数_沪深300",
+    "step_13_指数_中证500",
+    "step_13_情绪_sentiment_0",
+    "step_13_情绪_sentiment_1",
+    "step_14_个股_成交量",
+    "step_14_个股_涨跌幅",
+    "step_14_个股_成交额",
+    "step_14_个股_换手率",
+    "step_14_个股_振幅",
+    "step_14_个股_RSI",
+    "step_14_个股_MACD_signal",
+    "step_14_行业_成交量",
+    "step_14_行业_涨跌幅",
+    "step_14_指数_上证指数",
+    "step_14_指数_沪深300",
+    "step_14_指数_创业板指",
+    "step_14_情绪_sentiment_0",
+    "step_14_情绪_sentiment_1",
+    "step_15_个股_涨跌幅",
+    "step_15_个股_成交额",
+    "step_15_个股_换手率",
+    "step_15_个股_振幅",
+    "step_15_个股_RSI",
+    "step_15_个股_MACD",
+    "step_15_行业_最低价",
+    "step_15_行业_成交量",
+    "step_15_行业_涨跌幅",
+    "step_15_指数_上证指数",
+    "step_15_指数_沪深300",
+    "step_15_指数_中证500",
+    "step_15_情绪_sentiment_0",
+    "step_15_情绪_sentiment_1",
+    "step_16_个股_成交量",
+    "step_16_个股_涨跌幅",
+    "step_16_个股_成交额",
+    "step_16_个股_换手率",
+    "step_16_个股_振幅",
+    "step_16_个股_RSI",
+    "step_16_行业_成交量",
+    "step_16_行业_涨跌幅",
+    "step_16_指数_上证指数",
+    "step_16_指数_沪深300",
+    "step_16_指数_创业板指",
+    "step_16_情绪_sentiment_0",
+    "step_16_情绪_sentiment_1",
+    "step_17_个股_成交量",
+    "step_17_个股_涨跌幅",
+    "step_17_个股_成交额",
+    "step_17_个股_换手率",
+    "step_17_个股_振幅",
+    "step_17_个股_RSI",
+    "step_17_个股_MACD",
+    "step_17_个股_MACD_signal",
+    "step_17_行业_成交量",
+    "step_17_行业_涨跌幅",
+    "step_17_指数_上证指数",
+    "step_17_指数_沪深300",
+    "step_17_指数_创业板指",
+    "step_17_情绪_sentiment_0",
+    "step_17_情绪_sentiment_1",
+    "step_18_个股_涨跌幅",
+    "step_18_个股_换手率",
+    "step_18_个股_振幅",
+    "step_18_个股_RSI",
+    "step_18_个股_MACD_signal",
+    "step_18_行业_最低价",
+    "step_18_行业_成交量",
+    "step_18_行业_涨跌幅",
+    "step_18_指数_上证指数",
+    "step_18_指数_深证成指",
+    "step_18_情绪_sentiment_0",
+    "step_18_情绪_sentiment_1",
+    "step_19_个股_涨跌幅",
+    "step_19_个股_换手率",
+    "step_19_个股_振幅",
+    "step_19_个股_RSI",
+    "step_19_行业_成交量",
+    "step_19_行业_涨跌幅",
+    "step_19_指数_沪深300",
+    "step_19_指数_中证500",
+    "step_19_情绪_sentiment_0",
+    "step_19_情绪_sentiment_1",
+    "step_20_个股_涨跌幅",
+    "step_20_个股_成交额",
+    "step_20_个股_换手率",
+    "step_20_个股_振幅",
+    "step_20_个股_RSI",
+    "step_20_个股_MACD",
+    "step_20_行业_成交量",
+    "step_20_行业_涨跌幅",
+    "step_20_指数_上证指数",
+    "step_20_指数_沪深300",
+    "step_20_指数_深证成指",
+    "step_20_情绪_sentiment_0",
+    "step_20_情绪_sentiment_1",
+    "step_21_个股_成交量",
+    "step_21_个股_涨跌幅",
+    "step_21_个股_成交额",
+    "step_21_个股_换手率",
+    "step_21_个股_振幅",
+    "step_21_个股_RSI",
+    "step_21_行业_最高价",
+    "step_21_行业_成交量",
+    "step_21_行业_涨跌幅",
+    "step_21_指数_沪深300",
+    "step_21_指数_创业板指",
+    "step_21_情绪_sentiment_0",
+    "step_21_情绪_sentiment_1",
+    "step_22_个股_成交量",
+    "step_22_个股_涨跌幅",
+    "step_22_个股_成交额",
+    "step_22_个股_换手率",
+    "step_22_个股_振幅",
+    "step_22_个股_RSI",
+    "step_22_个股_MACD",
+    "step_22_行业_成交量",
+    "step_22_行业_涨跌幅",
+    "step_22_指数_上证指数",
+    "step_22_指数_沪深300",
+    "step_22_指数_深证成指",
+    "step_22_情绪_sentiment_0",
+    "step_22_情绪_sentiment_1",
+    "step_23_个股_涨跌幅",
+    "step_23_个股_成交额",
+    "step_23_个股_换手率",
+    "step_23_个股_振幅",
+    "step_23_个股_RSI",
+    "step_23_个股_MACD_signal",
+    "step_23_行业_收盘价",
+    "step_23_行业_成交量",
+    "step_23_行业_涨跌幅",
+    "step_23_指数_上证指数",
+    "step_23_指数_沪深300",
+    "step_23_指数_创业板指",
+    "step_23_情绪_sentiment_0",
+    "step_23_情绪_sentiment_1",
+    "step_24_个股_成交量",
+    "step_24_个股_涨跌幅",
+    "step_24_个股_成交额",
+    "step_24_个股_换手率",
+    "step_24_个股_振幅",
+    "step_24_个股_RSI",
+    "step_24_个股_MACD",
+    "step_24_行业_成交量",
+    "step_24_行业_涨跌幅",
+    "step_24_指数_上证指数",
+    "step_24_指数_沪深300",
+    "step_24_指数_中证500",
+    "step_24_情绪_sentiment_0",
+    "step_24_情绪_sentiment_1",
+    "step_25_个股_成交量",
+    "step_25_个股_涨跌幅",
+    "step_25_个股_成交额",
+    "step_25_个股_换手率",
+    "step_25_个股_振幅",
+    "step_25_个股_RSI",
+    "step_25_个股_MACD",
+    "step_25_行业_收盘价",
+    "step_25_行业_成交量",
+    "step_25_行业_涨跌幅",
+    "step_25_指数_上证指数",
+    "step_25_指数_沪深300",
+    "step_25_指数_深证成指",
+    "step_25_情绪_sentiment_0",
+    "step_25_情绪_sentiment_1",
+    "step_26_个股_成交量",
+    "step_26_个股_涨跌幅",
+    "step_26_个股_成交额",
+    "step_26_个股_换手率",
+    "step_26_个股_振幅",
+    "step_26_个股_RSI",
+    "step_26_个股_MACD",
+    "step_26_个股_MACD_signal",
+    "step_26_行业_成交量",
+    "step_26_行业_涨跌幅",
+    "step_26_指数_上证指数",
+    "step_26_指数_沪深300",
+    "step_26_情绪_sentiment_0",
+    "step_26_情绪_sentiment_1",
+    "step_27_个股_成交量",
+    "step_27_个股_涨跌幅",
+    "step_27_个股_成交额",
+    "step_27_个股_换手率",
+    "step_27_个股_振幅",
+    "step_27_个股_RSI",
+    "step_27_个股_MACD",
+    "step_27_个股_MACD_signal",
+    "step_27_行业_成交量",
+    "step_27_行业_涨跌幅",
+    "step_27_指数_上证指数",
+    "step_27_指数_沪深300",
+    "step_27_情绪_sentiment_0",
+    "step_27_情绪_sentiment_1",
+    "step_28_个股_成交量",
+    "step_28_个股_涨跌幅",
+    "step_28_个股_成交额",
+    "step_28_个股_换手率",
+    "step_28_个股_振幅",
+    "step_28_个股_RSI",
+    "step_28_个股_MACD_signal",
+    "step_28_行业_开盘价",
+    "step_28_行业_成交量",
+    "step_28_行业_涨跌幅",
+    "step_28_指数_上证指数",
+    "step_28_指数_沪深300",
+    "step_28_指数_中证500",
+    "step_28_情绪_sentiment_0",
+    "step_28_情绪_sentiment_1",
+    "step_29_个股_最高价",
+    "step_29_个股_成交量",
+    "step_29_个股_涨跌幅",
+    "step_29_个股_成交额",
+    "step_29_个股_换手率",
+    "step_29_个股_振幅",
+    "step_29_个股_RSI",
+    "step_29_个股_MACD",
+    "step_29_个股_MACD_signal",
+    "step_29_行业_收盘价",
+    "step_29_行业_成交量",
+    "step_29_行业_涨跌幅",
+    "step_29_指数_上证指数",
+    "step_29_指数_中证500",
+    "step_29_情绪_sentiment_0",
+    "step_29_情绪_sentiment_1",
+    "RSI_开盘价",
+    "RSI_收盘价",
+    "Momentum10D_最高价",
+    "RSI_最低价",
+    "Volatility_最低价",
+    "Momentum5D_最低价",
+    "Momentum10D_最低价"
+  ],
+  "original_feature_names": [
+    "step_00_个股_开盘价",
+    "step_00_个股_收盘价",
+    "step_00_个股_最高价",
+    "step_00_个股_成交量",
+    "step_00_个股_涨跌幅",
+    "step_00_个股_成交量.1",
+    "step_00_个股_成交额",
+    "step_00_个股_换手率",
+    "step_00_个股_振幅",
+    "step_00_个股_流通市值",
+    "step_00_个股_RSI",
+    "step_00_个股_MACD",
+    "step_00_个股_MACD_signal",
+    "step_00_个股_BB_upper",
+    "step_00_个股_BB_middle",
+    "step_00_行业_开盘价",
+    "step_00_行业_收盘价",
+    "step_00_行业_最高价",
+    "step_00_行业_最低价",
+    "step_00_行业_成交量",
+    "step_00_行业_涨跌幅",
+    "step_00_指数_上证指数",
+    "step_00_指数_沪深300",
+    "step_00_指数_深证成指",
+    "step_00_指数_创业板指",
+    "step_00_指数_中证500",
+    "step_00_情绪_sentiment_0",
+    "step_00_情绪_sentiment_1",
+    "step_01_个股_开盘价",
+    "step_01_个股_收盘价",
+    "step_01_个股_最高价",
+    "step_01_个股_成交量",
+    "step_01_个股_涨跌幅",
+    "step_01_个股_成交量.1",
+    "step_01_个股_成交额",
+    "step_01_个股_换手率",
+    "step_01_个股_振幅",
+    "step_01_个股_流通市值",
+    "step_01_个股_RSI",
+    "step_01_个股_MACD",
+    "step_01_个股_MACD_signal",
+    "step_01_个股_BB_upper",
+    "step_01_个股_BB_middle",
+    "step_01_行业_开盘价",
+    "step_01_行业_收盘价",
+    "step_01_行业_最高价",
+    "step_01_行业_最低价",
+    "step_01_行业_成交量",
+    "step_01_行业_涨跌幅",
+    "step_01_指数_上证指数",
+    "step_01_指数_沪深300",
+    "step_01_指数_深证成指",
+    "step_01_指数_创业板指",
+    "step_01_指数_中证500",
+    "step_01_情绪_sentiment_0",
+    "step_01_情绪_sentiment_1",
+    "step_02_个股_开盘价",
+    "step_02_个股_收盘价",
+    "step_02_个股_最高价",
+    "step_02_个股_成交量",
+    "step_02_个股_涨跌幅",
+    "step_02_个股_成交量.1",
+    "step_02_个股_成交额",
+    "step_02_个股_换手率",
+    "step_02_个股_振幅",
+    "step_02_个股_流通市值",
+    "step_02_个股_RSI",
+    "step_02_个股_MACD",
+    "step_02_个股_MACD_signal",
+    "step_02_个股_BB_upper",
+    "step_02_个股_BB_middle",
+    "step_02_行业_开盘价",
+    "step_02_行业_收盘价",
+    "step_02_行业_最高价",
+    "step_02_行业_最低价",
+    "step_02_行业_成交量",
+    "step_02_行业_涨跌幅",
+    "step_02_指数_上证指数",
+    "step_02_指数_沪深300",
+    "step_02_指数_深证成指",
+    "step_02_指数_创业板指",
+    "step_02_指数_中证500",
+    "step_02_情绪_sentiment_0",
+    "step_02_情绪_sentiment_1",
+    "step_03_个股_开盘价",
+    "step_03_个股_收盘价",
+    "step_03_个股_最高价",
+    "step_03_个股_成交量",
+    "step_03_个股_涨跌幅",
+    "step_03_个股_成交量.1",
+    "step_03_个股_成交额",
+    "step_03_个股_换手率",
+    "step_03_个股_振幅",
+    "step_03_个股_流通市值",
+    "step_03_个股_RSI",
+    "step_03_个股_MACD",
+    "step_03_个股_MACD_signal",
+    "step_03_个股_BB_upper",
+    "step_03_个股_BB_middle",
+    "step_03_行业_开盘价",
+    "step_03_行业_收盘价",
+    "step_03_行业_最高价",
+    "step_03_行业_最低价",
+    "step_03_行业_成交量",
+    "step_03_行业_涨跌幅",
+    "step_03_指数_上证指数",
+    "step_03_指数_沪深300",
+    "step_03_指数_深证成指",
+    "step_03_指数_创业板指",
+    "step_03_指数_中证500",
+    "step_03_情绪_sentiment_0",
+    "step_03_情绪_sentiment_1",
+    "step_04_个股_开盘价",
+    "step_04_个股_收盘价",
+    "step_04_个股_最高价",
+    "step_04_个股_成交量",
+    "step_04_个股_涨跌幅",
+    "step_04_个股_成交量.1",
+    "step_04_个股_成交额",
+    "step_04_个股_换手率",
+    "step_04_个股_振幅",
+    "step_04_个股_流通市值",
+    "step_04_个股_RSI",
+    "step_04_个股_MACD",
+    "step_04_个股_MACD_signal",
+    "step_04_个股_BB_upper",
+    "step_04_个股_BB_middle",
+    "step_04_行业_开盘价",
+    "step_04_行业_收盘价",
+    "step_04_行业_最高价",
+    "step_04_行业_最低价",
+    "step_04_行业_成交量",
+    "step_04_行业_涨跌幅",
+    "step_04_指数_上证指数",
+    "step_04_指数_沪深300",
+    "step_04_指数_深证成指",
+    "step_04_指数_创业板指",
+    "step_04_指数_中证500",
+    "step_04_情绪_sentiment_0",
+    "step_04_情绪_sentiment_1",
+    "step_05_个股_开盘价",
+    "step_05_个股_收盘价",
+    "step_05_个股_最高价",
+    "step_05_个股_成交量",
+    "step_05_个股_涨跌幅",
+    "step_05_个股_成交量.1",
+    "step_05_个股_成交额",
+    "step_05_个股_换手率",
+    "step_05_个股_振幅",
+    "step_05_个股_流通市值",
+    "step_05_个股_RSI",
+    "step_05_个股_MACD",
+    "step_05_个股_MACD_signal",
+    "step_05_个股_BB_upper",
+    "step_05_个股_BB_middle",
+    "step_05_行业_开盘价",
+    "step_05_行业_收盘价",
+    "step_05_行业_最高价",
+    "step_05_行业_最低价",
+    "step_05_行业_成交量",
+    "step_05_行业_涨跌幅",
+    "step_05_指数_上证指数",
+    "step_05_指数_沪深300",
+    "step_05_指数_深证成指",
+    "step_05_指数_创业板指",
+    "step_05_指数_中证500",
+    "step_05_情绪_sentiment_0",
+    "step_05_情绪_sentiment_1",
+    "step_06_个股_开盘价",
+    "step_06_个股_收盘价",
+    "step_06_个股_最高价",
+    "step_06_个股_成交量",
+    "step_06_个股_涨跌幅",
+    "step_06_个股_成交量.1",
+    "step_06_个股_成交额",
+    "step_06_个股_换手率",
+    "step_06_个股_振幅",
+    "step_06_个股_流通市值",
+    "step_06_个股_RSI",
+    "step_06_个股_MACD",
+    "step_06_个股_MACD_signal",
+    "step_06_个股_BB_upper",
+    "step_06_个股_BB_middle",
+    "step_06_行业_开盘价",
+    "step_06_行业_收盘价",
+    "step_06_行业_最高价",
+    "step_06_行业_最低价",
+    "step_06_行业_成交量",
+    "step_06_行业_涨跌幅",
+    "step_06_指数_上证指数",
+    "step_06_指数_沪深300",
+    "step_06_指数_深证成指",
+    "step_06_指数_创业板指",
+    "step_06_指数_中证500",
+    "step_06_情绪_sentiment_0",
+    "step_06_情绪_sentiment_1",
+    "step_07_个股_开盘价",
+    "step_07_个股_收盘价",
+    "step_07_个股_最高价",
+    "step_07_个股_成交量",
+    "step_07_个股_涨跌幅",
+    "step_07_个股_成交量.1",
+    "step_07_个股_成交额",
+    "step_07_个股_换手率",
+    "step_07_个股_振幅",
+    "step_07_个股_流通市值",
+    "step_07_个股_RSI",
+    "step_07_个股_MACD",
+    "step_07_个股_MACD_signal",
+    "step_07_个股_BB_upper",
+    "step_07_个股_BB_middle",
+    "step_07_行业_开盘价",
+    "step_07_行业_收盘价",
+    "step_07_行业_最高价",
+    "step_07_行业_最低价",
+    "step_07_行业_成交量",
+    "step_07_行业_涨跌幅",
+    "step_07_指数_上证指数",
+    "step_07_指数_沪深300",
+    "step_07_指数_深证成指",
+    "step_07_指数_创业板指",
+    "step_07_指数_中证500",
+    "step_07_情绪_sentiment_0",
+    "step_07_情绪_sentiment_1",
+    "step_08_个股_开盘价",
+    "step_08_个股_收盘价",
+    "step_08_个股_最高价",
+    "step_08_个股_成交量",
+    "step_08_个股_涨跌幅",
+    "step_08_个股_成交量.1",
+    "step_08_个股_成交额",
+    "step_08_个股_换手率",
+    "step_08_个股_振幅",
+    "step_08_个股_流通市值",
+    "step_08_个股_RSI",
+    "step_08_个股_MACD",
+    "step_08_个股_MACD_signal",
+    "step_08_个股_BB_upper",
+    "step_08_个股_BB_middle",
+    "step_08_行业_开盘价",
+    "step_08_行业_收盘价",
+    "step_08_行业_最高价",
+    "step_08_行业_最低价",
+    "step_08_行业_成交量",
+    "step_08_行业_涨跌幅",
+    "step_08_指数_上证指数",
+    "step_08_指数_沪深300",
+    "step_08_指数_深证成指",
+    "step_08_指数_创业板指",
+    "step_08_指数_中证500",
+    "step_08_情绪_sentiment_0",
+    "step_08_情绪_sentiment_1",
+    "step_09_个股_开盘价",
+    "step_09_个股_收盘价",
+    "step_09_个股_最高价",
+    "step_09_个股_成交量",
+    "step_09_个股_涨跌幅",
+    "step_09_个股_成交量.1",
+    "step_09_个股_成交额",
+    "step_09_个股_换手率",
+    "step_09_个股_振幅",
+    "step_09_个股_流通市值",
+    "step_09_个股_RSI",
+    "step_09_个股_MACD",
+    "step_09_个股_MACD_signal",
+    "step_09_个股_BB_upper",
+    "step_09_个股_BB_middle",
+    "step_09_行业_开盘价",
+    "step_09_行业_收盘价",
+    "step_09_行业_最高价",
+    "step_09_行业_最低价",
+    "step_09_行业_成交量",
+    "step_09_行业_涨跌幅",
+    "step_09_指数_上证指数",
+    "step_09_指数_沪深300",
+    "step_09_指数_深证成指",
+    "step_09_指数_创业板指",
+    "step_09_指数_中证500",
+    "step_09_情绪_sentiment_0",
+    "step_09_情绪_sentiment_1",
+    "step_10_个股_开盘价",
+    "step_10_个股_收盘价",
+    "step_10_个股_最高价",
+    "step_10_个股_成交量",
+    "step_10_个股_涨跌幅",
+    "step_10_个股_成交量.1",
+    "step_10_个股_成交额",
+    "step_10_个股_换手率",
+    "step_10_个股_振幅",
+    "step_10_个股_流通市值",
+    "step_10_个股_RSI",
+    "step_10_个股_MACD",
+    "step_10_个股_MACD_signal",
+    "step_10_个股_BB_upper",
+    "step_10_个股_BB_middle",
+    "step_10_行业_开盘价",
+    "step_10_行业_收盘价",
+    "step_10_行业_最高价",
+    "step_10_行业_最低价",
+    "step_10_行业_成交量",
+    "step_10_行业_涨跌幅",
+    "step_10_指数_上证指数",
+    "step_10_指数_沪深300",
+    "step_10_指数_深证成指",
+    "step_10_指数_创业板指",
+    "step_10_指数_中证500",
+    "step_10_情绪_sentiment_0",
+    "step_10_情绪_sentiment_1",
+    "step_11_个股_开盘价",
+    "step_11_个股_收盘价",
+    "step_11_个股_最高价",
+    "step_11_个股_成交量",
+    "step_11_个股_涨跌幅",
+    "step_11_个股_成交量.1",
+    "step_11_个股_成交额",
+    "step_11_个股_换手率",
+    "step_11_个股_振幅",
+    "step_11_个股_流通市值",
+    "step_11_个股_RSI",
+    "step_11_个股_MACD",
+    "step_11_个股_MACD_signal",
+    "step_11_个股_BB_upper",
+    "step_11_个股_BB_middle",
+    "step_11_行业_开盘价",
+    "step_11_行业_收盘价",
+    "step_11_行业_最高价",
+    "step_11_行业_最低价",
+    "step_11_行业_成交量",
+    "step_11_行业_涨跌幅",
+    "step_11_指数_上证指数",
+    "step_11_指数_沪深300",
+    "step_11_指数_深证成指",
+    "step_11_指数_创业板指",
+    "step_11_指数_中证500",
+    "step_11_情绪_sentiment_0",
+    "step_11_情绪_sentiment_1",
+    "step_12_个股_开盘价",
+    "step_12_个股_收盘价",
+    "step_12_个股_最高价",
+    "step_12_个股_成交量",
+    "step_12_个股_涨跌幅",
+    "step_12_个股_成交量.1",
+    "step_12_个股_成交额",
+    "step_12_个股_换手率",
+    "step_12_个股_振幅",
+    "step_12_个股_流通市值",
+    "step_12_个股_RSI",
+    "step_12_个股_MACD",
+    "step_12_个股_MACD_signal",
+    "step_12_个股_BB_upper",
+    "step_12_个股_BB_middle",
+    "step_12_行业_开盘价",
+    "step_12_行业_收盘价",
+    "step_12_行业_最高价",
+    "step_12_行业_最低价",
+    "step_12_行业_成交量",
+    "step_12_行业_涨跌幅",
+    "step_12_指数_上证指数",
+    "step_12_指数_沪深300",
+    "step_12_指数_深证成指",
+    "step_12_指数_创业板指",
+    "step_12_指数_中证500",
+    "step_12_情绪_sentiment_0",
+    "step_12_情绪_sentiment_1",
+    "step_13_个股_开盘价",
+    "step_13_个股_收盘价",
+    "step_13_个股_最高价",
+    "step_13_个股_成交量",
+    "step_13_个股_涨跌幅",
+    "step_13_个股_成交量.1",
+    "step_13_个股_成交额",
+    "step_13_个股_换手率",
+    "step_13_个股_振幅",
+    "step_13_个股_流通市值",
+    "step_13_个股_RSI",
+    "step_13_个股_MACD",
+    "step_13_个股_MACD_signal",
+    "step_13_个股_BB_upper",
+    "step_13_个股_BB_middle",
+    "step_13_行业_开盘价",
+    "step_13_行业_收盘价",
+    "step_13_行业_最高价",
+    "step_13_行业_最低价",
+    "step_13_行业_成交量",
+    "step_13_行业_涨跌幅",
+    "step_13_指数_上证指数",
+    "step_13_指数_沪深300",
+    "step_13_指数_深证成指",
+    "step_13_指数_创业板指",
+    "step_13_指数_中证500",
+    "step_13_情绪_sentiment_0",
+    "step_13_情绪_sentiment_1",
+    "step_14_个股_开盘价",
+    "step_14_个股_收盘价",
+    "step_14_个股_最高价",
+    "step_14_个股_成交量",
+    "step_14_个股_涨跌幅",
+    "step_14_个股_成交量.1",
+    "step_14_个股_成交额",
+    "step_14_个股_换手率",
+    "step_14_个股_振幅",
+    "step_14_个股_流通市值",
+    "step_14_个股_RSI",
+    "step_14_个股_MACD",
+    "step_14_个股_MACD_signal",
+    "step_14_个股_BB_upper",
+    "step_14_个股_BB_middle",
+    "step_14_行业_开盘价",
+    "step_14_行业_收盘价",
+    "step_14_行业_最高价",
+    "step_14_行业_最低价",
+    "step_14_行业_成交量",
+    "step_14_行业_涨跌幅",
+    "step_14_指数_上证指数",
+    "step_14_指数_沪深300",
+    "step_14_指数_深证成指",
+    "step_14_指数_创业板指",
+    "step_14_指数_中证500",
+    "step_14_情绪_sentiment_0",
+    "step_14_情绪_sentiment_1",
+    "step_15_个股_开盘价",
+    "step_15_个股_收盘价",
+    "step_15_个股_最高价",
+    "step_15_个股_成交量",
+    "step_15_个股_涨跌幅",
+    "step_15_个股_成交量.1",
+    "step_15_个股_成交额",
+    "step_15_个股_换手率",
+    "step_15_个股_振幅",
+    "step_15_个股_流通市值",
+    "step_15_个股_RSI",
+    "step_15_个股_MACD",
+    "step_15_个股_MACD_signal",
+    "step_15_个股_BB_upper",
+    "step_15_个股_BB_middle",
+    "step_15_行业_开盘价",
+    "step_15_行业_收盘价",
+    "step_15_行业_最高价",
+    "step_15_行业_最低价",
+    "step_15_行业_成交量",
+    "step_15_行业_涨跌幅",
+    "step_15_指数_上证指数",
+    "step_15_指数_沪深300",
+    "step_15_指数_深证成指",
+    "step_15_指数_创业板指",
+    "step_15_指数_中证500",
+    "step_15_情绪_sentiment_0",
+    "step_15_情绪_sentiment_1",
+    "step_16_个股_开盘价",
+    "step_16_个股_收盘价",
+    "step_16_个股_最高价",
+    "step_16_个股_成交量",
+    "step_16_个股_涨跌幅",
+    "step_16_个股_成交量.1",
+    "step_16_个股_成交额",
+    "step_16_个股_换手率",
+    "step_16_个股_振幅",
+    "step_16_个股_流通市值",
+    "step_16_个股_RSI",
+    "step_16_个股_MACD",
+    "step_16_个股_MACD_signal",
+    "step_16_个股_BB_upper",
+    "step_16_个股_BB_middle",
+    "step_16_行业_开盘价",
+    "step_16_行业_收盘价",
+    "step_16_行业_最高价",
+    "step_16_行业_最低价",
+    "step_16_行业_成交量",
+    "step_16_行业_涨跌幅",
+    "step_16_指数_上证指数",
+    "step_16_指数_沪深300",
+    "step_16_指数_深证成指",
+    "step_16_指数_创业板指",
+    "step_16_指数_中证500",
+    "step_16_情绪_sentiment_0",
+    "step_16_情绪_sentiment_1",
+    "step_17_个股_开盘价",
+    "step_17_个股_收盘价",
+    "step_17_个股_最高价",
+    "step_17_个股_成交量",
+    "step_17_个股_涨跌幅",
+    "step_17_个股_成交量.1",
+    "step_17_个股_成交额",
+    "step_17_个股_换手率",
+    "step_17_个股_振幅",
+    "step_17_个股_流通市值",
+    "step_17_个股_RSI",
+    "step_17_个股_MACD",
+    "step_17_个股_MACD_signal",
+    "step_17_个股_BB_upper",
+    "step_17_个股_BB_middle",
+    "step_17_行业_开盘价",
+    "step_17_行业_收盘价",
+    "step_17_行业_最高价",
+    "step_17_行业_最低价",
+    "step_17_行业_成交量",
+    "step_17_行业_涨跌幅",
+    "step_17_指数_上证指数",
+    "step_17_指数_沪深300",
+    "step_17_指数_深证成指",
+    "step_17_指数_创业板指",
+    "step_17_指数_中证500",
+    "step_17_情绪_sentiment_0",
+    "step_17_情绪_sentiment_1",
+    "step_18_个股_开盘价",
+    "step_18_个股_收盘价",
+    "step_18_个股_最高价",
+    "step_18_个股_成交量",
+    "step_18_个股_涨跌幅",
+    "step_18_个股_成交量.1",
+    "step_18_个股_成交额",
+    "step_18_个股_换手率",
+    "step_18_个股_振幅",
+    "step_18_个股_流通市值",
+    "step_18_个股_RSI",
+    "step_18_个股_MACD",
+    "step_18_个股_MACD_signal",
+    "step_18_个股_BB_upper",
+    "step_18_个股_BB_middle",
+    "step_18_行业_开盘价",
+    "step_18_行业_收盘价",
+    "step_18_行业_最高价",
+    "step_18_行业_最低价",
+    "step_18_行业_成交量",
+    "step_18_行业_涨跌幅",
+    "step_18_指数_上证指数",
+    "step_18_指数_沪深300",
+    "step_18_指数_深证成指",
+    "step_18_指数_创业板指",
+    "step_18_指数_中证500",
+    "step_18_情绪_sentiment_0",
+    "step_18_情绪_sentiment_1",
+    "step_19_个股_开盘价",
+    "step_19_个股_收盘价",
+    "step_19_个股_最高价",
+    "step_19_个股_成交量",
+    "step_19_个股_涨跌幅",
+    "step_19_个股_成交量.1",
+    "step_19_个股_成交额",
+    "step_19_个股_换手率",
+    "step_19_个股_振幅",
+    "step_19_个股_流通市值",
+    "step_19_个股_RSI",
+    "step_19_个股_MACD",
+    "step_19_个股_MACD_signal",
+    "step_19_个股_BB_upper",
+    "step_19_个股_BB_middle",
+    "step_19_行业_开盘价",
+    "step_19_行业_收盘价",
+    "step_19_行业_最高价",
+    "step_19_行业_最低价",
+    "step_19_行业_成交量",
+    "step_19_行业_涨跌幅",
+    "step_19_指数_上证指数",
+    "step_19_指数_沪深300",
+    "step_19_指数_深证成指",
+    "step_19_指数_创业板指",
+    "step_19_指数_中证500",
+    "step_19_情绪_sentiment_0",
+    "step_19_情绪_sentiment_1",
+    "step_20_个股_开盘价",
+    "step_20_个股_收盘价",
+    "step_20_个股_最高价",
+    "step_20_个股_成交量",
+    "step_20_个股_涨跌幅",
+    "step_20_个股_成交量.1",
+    "step_20_个股_成交额",
+    "step_20_个股_换手率",
+    "step_20_个股_振幅",
+    "step_20_个股_流通市值",
+    "step_20_个股_RSI",
+    "step_20_个股_MACD",
+    "step_20_个股_MACD_signal",
+    "step_20_个股_BB_upper",
+    "step_20_个股_BB_middle",
+    "step_20_行业_开盘价",
+    "step_20_行业_收盘价",
+    "step_20_行业_最高价",
+    "step_20_行业_最低价",
+    "step_20_行业_成交量",
+    "step_20_行业_涨跌幅",
+    "step_20_指数_上证指数",
+    "step_20_指数_沪深300",
+    "step_20_指数_深证成指",
+    "step_20_指数_创业板指",
+    "step_20_指数_中证500",
+    "step_20_情绪_sentiment_0",
+    "step_20_情绪_sentiment_1",
+    "step_21_个股_开盘价",
+    "step_21_个股_收盘价",
+    "step_21_个股_最高价",
+    "step_21_个股_成交量",
+    "step_21_个股_涨跌幅",
+    "step_21_个股_成交量.1",
+    "step_21_个股_成交额",
+    "step_21_个股_换手率",
+    "step_21_个股_振幅",
+    "step_21_个股_流通市值",
+    "step_21_个股_RSI",
+    "step_21_个股_MACD",
+    "step_21_个股_MACD_signal",
+    "step_21_个股_BB_upper",
+    "step_21_个股_BB_middle",
+    "step_21_行业_开盘价",
+    "step_21_行业_收盘价",
+    "step_21_行业_最高价",
+    "step_21_行业_最低价",
+    "step_21_行业_成交量",
+    "step_21_行业_涨跌幅",
+    "step_21_指数_上证指数",
+    "step_21_指数_沪深300",
+    "step_21_指数_深证成指",
+    "step_21_指数_创业板指",
+    "step_21_指数_中证500",
+    "step_21_情绪_sentiment_0",
+    "step_21_情绪_sentiment_1",
+    "step_22_个股_开盘价",
+    "step_22_个股_收盘价",
+    "step_22_个股_最高价",
+    "step_22_个股_成交量",
+    "step_22_个股_涨跌幅",
+    "step_22_个股_成交量.1",
+    "step_22_个股_成交额",
+    "step_22_个股_换手率",
+    "step_22_个股_振幅",
+    "step_22_个股_流通市值",
+    "step_22_个股_RSI",
+    "step_22_个股_MACD",
+    "step_22_个股_MACD_signal",
+    "step_22_个股_BB_upper",
+    "step_22_个股_BB_middle",
+    "step_22_行业_开盘价",
+    "step_22_行业_收盘价",
+    "step_22_行业_最高价",
+    "step_22_行业_最低价",
+    "step_22_行业_成交量",
+    "step_22_行业_涨跌幅",
+    "step_22_指数_上证指数",
+    "step_22_指数_沪深300",
+    "step_22_指数_深证成指",
+    "step_22_指数_创业板指",
+    "step_22_指数_中证500",
+    "step_22_情绪_sentiment_0",
+    "step_22_情绪_sentiment_1",
+    "step_23_个股_开盘价",
+    "step_23_个股_收盘价",
+    "step_23_个股_最高价",
+    "step_23_个股_成交量",
+    "step_23_个股_涨跌幅",
+    "step_23_个股_成交量.1",
+    "step_23_个股_成交额",
+    "step_23_个股_换手率",
+    "step_23_个股_振幅",
+    "step_23_个股_流通市值",
+    "step_23_个股_RSI",
+    "step_23_个股_MACD",
+    "step_23_个股_MACD_signal",
+    "step_23_个股_BB_upper",
+    "step_23_个股_BB_middle",
+    "step_23_行业_开盘价",
+    "step_23_行业_收盘价",
+    "step_23_行业_最高价",
+    "step_23_行业_最低价",
+    "step_23_行业_成交量",
+    "step_23_行业_涨跌幅",
+    "step_23_指数_上证指数",
+    "step_23_指数_沪深300",
+    "step_23_指数_深证成指",
+    "step_23_指数_创业板指",
+    "step_23_指数_中证500",
+    "step_23_情绪_sentiment_0",
+    "step_23_情绪_sentiment_1",
+    "step_24_个股_开盘价",
+    "step_24_个股_收盘价",
+    "step_24_个股_最高价",
+    "step_24_个股_成交量",
+    "step_24_个股_涨跌幅",
+    "step_24_个股_成交量.1",
+    "step_24_个股_成交额",
+    "step_24_个股_换手率",
+    "step_24_个股_振幅",
+    "step_24_个股_流通市值",
+    "step_24_个股_RSI",
+    "step_24_个股_MACD",
+    "step_24_个股_MACD_signal",
+    "step_24_个股_BB_upper",
+    "step_24_个股_BB_middle",
+    "step_24_行业_开盘价",
+    "step_24_行业_收盘价",
+    "step_24_行业_最高价",
+    "step_24_行业_最低价",
+    "step_24_行业_成交量",
+    "step_24_行业_涨跌幅",
+    "step_24_指数_上证指数",
+    "step_24_指数_沪深300",
+    "step_24_指数_深证成指",
+    "step_24_指数_创业板指",
+    "step_24_指数_中证500",
+    "step_24_情绪_sentiment_0",
+    "step_24_情绪_sentiment_1",
+    "step_25_个股_开盘价",
+    "step_25_个股_收盘价",
+    "step_25_个股_最高价",
+    "step_25_个股_成交量",
+    "step_25_个股_涨跌幅",
+    "step_25_个股_成交量.1",
+    "step_25_个股_成交额",
+    "step_25_个股_换手率",
+    "step_25_个股_振幅",
+    "step_25_个股_流通市值",
+    "step_25_个股_RSI",
+    "step_25_个股_MACD",
+    "step_25_个股_MACD_signal",
+    "step_25_个股_BB_upper",
+    "step_25_个股_BB_middle",
+    "step_25_行业_开盘价",
+    "step_25_行业_收盘价",
+    "step_25_行业_最高价",
+    "step_25_行业_最低价",
+    "step_25_行业_成交量",
+    "step_25_行业_涨跌幅",
+    "step_25_指数_上证指数",
+    "step_25_指数_沪深300",
+    "step_25_指数_深证成指",
+    "step_25_指数_创业板指",
+    "step_25_指数_中证500",
+    "step_25_情绪_sentiment_0",
+    "step_25_情绪_sentiment_1",
+    "step_26_个股_开盘价",
+    "step_26_个股_收盘价",
+    "step_26_个股_最高价",
+    "step_26_个股_成交量",
+    "step_26_个股_涨跌幅",
+    "step_26_个股_成交量.1",
+    "step_26_个股_成交额",
+    "step_26_个股_换手率",
+    "step_26_个股_振幅",
+    "step_26_个股_流通市值",
+    "step_26_个股_RSI",
+    "step_26_个股_MACD",
+    "step_26_个股_MACD_signal",
+    "step_26_个股_BB_upper",
+    "step_26_个股_BB_middle",
+    "step_26_行业_开盘价",
+    "step_26_行业_收盘价",
+    "step_26_行业_最高价",
+    "step_26_行业_最低价",
+    "step_26_行业_成交量",
+    "step_26_行业_涨跌幅",
+    "step_26_指数_上证指数",
+    "step_26_指数_沪深300",
+    "step_26_指数_深证成指",
+    "step_26_指数_创业板指",
+    "step_26_指数_中证500",
+    "step_26_情绪_sentiment_0",
+    "step_26_情绪_sentiment_1",
+    "step_27_个股_开盘价",
+    "step_27_个股_收盘价",
+    "step_27_个股_最高价",
+    "step_27_个股_成交量",
+    "step_27_个股_涨跌幅",
+    "step_27_个股_成交量.1",
+    "step_27_个股_成交额",
+    "step_27_个股_换手率",
+    "step_27_个股_振幅",
+    "step_27_个股_流通市值",
+    "step_27_个股_RSI",
+    "step_27_个股_MACD",
+    "step_27_个股_MACD_signal",
+    "step_27_个股_BB_upper",
+    "step_27_个股_BB_middle",
+    "step_27_行业_开盘价",
+    "step_27_行业_收盘价",
+    "step_27_行业_最高价",
+    "step_27_行业_最低价",
+    "step_27_行业_成交量",
+    "step_27_行业_涨跌幅",
+    "step_27_指数_上证指数",
+    "step_27_指数_沪深300",
+    "step_27_指数_深证成指",
+    "step_27_指数_创业板指",
+    "step_27_指数_中证500",
+    "step_27_情绪_sentiment_0",
+    "step_27_情绪_sentiment_1",
+    "step_28_个股_开盘价",
+    "step_28_个股_收盘价",
+    "step_28_个股_最高价",
+    "step_28_个股_成交量",
+    "step_28_个股_涨跌幅",
+    "step_28_个股_成交量.1",
+    "step_28_个股_成交额",
+    "step_28_个股_换手率",
+    "step_28_个股_振幅",
+    "step_28_个股_流通市值",
+    "step_28_个股_RSI",
+    "step_28_个股_MACD",
+    "step_28_个股_MACD_signal",
+    "step_28_个股_BB_upper",
+    "step_28_个股_BB_middle",
+    "step_28_行业_开盘价",
+    "step_28_行业_收盘价",
+    "step_28_行业_最高价",
+    "step_28_行业_最低价",
+    "step_28_行业_成交量",
+    "step_28_行业_涨跌幅",
+    "step_28_指数_上证指数",
+    "step_28_指数_沪深300",
+    "step_28_指数_深证成指",
+    "step_28_指数_创业板指",
+    "step_28_指数_中证500",
+    "step_28_情绪_sentiment_0",
+    "step_28_情绪_sentiment_1",
+    "step_29_个股_开盘价",
+    "step_29_个股_收盘价",
+    "step_29_个股_最高价",
+    "step_29_个股_成交量",
+    "step_29_个股_涨跌幅",
+    "step_29_个股_成交量.1",
+    "step_29_个股_成交额",
+    "step_29_个股_换手率",
+    "step_29_个股_振幅",
+    "step_29_个股_流通市值",
+    "step_29_个股_RSI",
+    "step_29_个股_MACD",
+    "step_29_个股_MACD_signal",
+    "step_29_个股_BB_upper",
+    "step_29_个股_BB_middle",
+    "step_29_行业_开盘价",
+    "step_29_行业_收盘价",
+    "step_29_行业_最高价",
+    "step_29_行业_最低价",
+    "step_29_行业_成交量",
+    "step_29_行业_涨跌幅",
+    "step_29_指数_上证指数",
+    "step_29_指数_沪深300",
+    "step_29_指数_深证成指",
+    "step_29_指数_创业板指",
+    "step_29_指数_中证500",
+    "step_29_情绪_sentiment_0",
+    "step_29_情绪_sentiment_1"
+  ],
+  "feature_count": 431,
+  "timeseries_method": "flatten",
+  "created_at": "2025-08-10 03:43:03",
+  "feature_mapping": {
+    "step_00_个股_开盘价": [
+      "step_00_情绪_sentiment_0",
+      "step_01_情绪_sentiment_0",
+      "step_02_情绪_sentiment_0",
+      "step_03_情绪_sentiment_0",
+      "step_04_情绪_sentiment_0",
+      "step_05_情绪_sentiment_0",
+      "step_06_情绪_sentiment_0",
+      "step_07_情绪_sentiment_0",
+      "step_08_情绪_sentiment_0",
+      "step_09_情绪_sentiment_0",
+      "step_10_情绪_sentiment_0",
+      "step_11_情绪_sentiment_0",
+      "step_12_情绪_sentiment_0",
+      "step_13_情绪_sentiment_0",
+      "step_14_情绪_sentiment_0",
+      "step_15_情绪_sentiment_0",
+      "step_16_情绪_sentiment_0",
+      "step_17_情绪_sentiment_0",
+      "step_18_情绪_sentiment_0",
+      "step_19_情绪_sentiment_0",
+      "step_20_情绪_sentiment_0",
+      "step_21_情绪_sentiment_0",
+      "step_22_情绪_sentiment_0",
+      "step_23_情绪_sentiment_0",
+      "step_24_情绪_sentiment_0",
+      "step_25_情绪_sentiment_0",
+      "step_26_情绪_sentiment_0",
+      "step_27_情绪_sentiment_0",
+      "step_28_情绪_sentiment_0",
+      "step_29_情绪_sentiment_0"
+    ],
+    "step_00_个股_收盘价": [
+      "step_00_情绪_sentiment_1",
+      "step_01_情绪_sentiment_1",
+      "step_02_情绪_sentiment_1",
+      "step_03_情绪_sentiment_1",
+      "step_04_情绪_sentiment_1",
+      "step_05_情绪_sentiment_1",
+      "step_06_情绪_sentiment_1",
+      "step_07_情绪_sentiment_1",
+      "step_08_情绪_sentiment_1",
+      "step_09_情绪_sentiment_1",
+      "step_10_情绪_sentiment_1",
+      "step_11_情绪_sentiment_1",
+      "step_12_情绪_sentiment_1",
+      "step_13_情绪_sentiment_1",
+      "step_14_情绪_sentiment_1",
+      "step_15_情绪_sentiment_1",
+      "step_16_情绪_sentiment_1",
+      "step_17_情绪_sentiment_1",
+      "step_18_情绪_sentiment_1",
+      "step_19_情绪_sentiment_1",
+      "step_20_情绪_sentiment_1",
+      "step_21_情绪_sentiment_1",
+      "step_22_情绪_sentiment_1",
+      "step_23_情绪_sentiment_1",
+      "step_24_情绪_sentiment_1",
+      "step_25_情绪_sentiment_1",
+      "step_26_情绪_sentiment_1",
+      "step_27_情绪_sentiment_1",
+      "step_28_情绪_sentiment_1",
+      "step_29_情绪_sentiment_1"
+    ],
+    "step_00_个股_最高价": [
+      "step_00_个股_最高价"
+    ],
+    "step_00_个股_成交量": [],
+    "step_00_个股_涨跌幅": [
+      "step_00_个股_涨跌幅"
+    ],
+    "step_00_个股_成交量.1": [],
+    "step_00_个股_成交额": [
+      "step_00_个股_成交额"
+    ],
+    "step_00_个股_换手率": [
+      "step_00_个股_换手率"
+    ],
+    "step_00_个股_振幅": [
+      "step_00_个股_振幅"
+    ],
+    "step_00_个股_流通市值": [
+      "step_00_个股_流通市值"
+    ],
+    "step_00_个股_RSI": [
+      "step_00_个股_RSI"
+    ],
+    "step_00_个股_MACD": [
+      "step_00_个股_MACD_signal"
+    ],
+    "step_00_个股_MACD_signal": [
+      "step_00_个股_MACD_signal"
+    ],
+    "step_00_个股_BB_upper": [],
+    "step_00_个股_BB_middle": [],
+    "step_00_行业_开盘价": [],
+    "step_00_行业_收盘价": [],
+    "step_00_行业_最高价": [],
+    "step_00_行业_最低价": [
+      "step_00_行业_最低价"
+    ],
+    "step_00_行业_成交量": [
+      "step_00_行业_成交量"
+    ],
+    "step_00_行业_涨跌幅": [
+      "step_00_行业_涨跌幅"
+    ],
+    "step_00_指数_上证指数": [
+      "step_00_指数_上证指数"
+    ],
+    "step_00_指数_沪深300": [
+      "step_00_指数_沪深300"
+    ],
+    "step_00_指数_深证成指": [],
+    "step_00_指数_创业板指": [
+      "step_00_指数_创业板指"
+    ],
+    "step_00_指数_中证500": [
+      "step_00_指数_中证500"
+    ],
+    "step_00_情绪_sentiment_0": [
+      "step_00_情绪_sentiment_0"
+    ],
+    "step_00_情绪_sentiment_1": [
+      "step_00_情绪_sentiment_1"
+    ],
+    "step_01_个股_开盘价": [],
+    "step_01_个股_收盘价": [],
+    "step_01_个股_最高价": [],
+    "step_01_个股_成交量": [
+      "step_01_个股_成交量"
+    ],
+    "step_01_个股_涨跌幅": [
+      "step_01_个股_涨跌幅"
+    ],
+    "step_01_个股_成交量.1": [],
+    "step_01_个股_成交额": [
+      "step_01_个股_成交额"
+    ],
+    "step_01_个股_换手率": [
+      "step_01_个股_换手率"
+    ],
+    "step_01_个股_振幅": [
+      "step_01_个股_振幅"
+    ],
+    "step_01_个股_流通市值": [],
+    "step_01_个股_RSI": [
+      "step_01_个股_RSI"
+    ],
+    "step_01_个股_MACD": [
+      "step_01_个股_MACD",
+      "step_01_个股_MACD_signal"
+    ],
+    "step_01_个股_MACD_signal": [
+      "step_01_个股_MACD_signal"
+    ],
+    "step_01_个股_BB_upper": [],
+    "step_01_个股_BB_middle": [],
+    "step_01_行业_开盘价": [],
+    "step_01_行业_收盘价": [],
+    "step_01_行业_最高价": [],
+    "step_01_行业_最低价": [],
+    "step_01_行业_成交量": [
+      "step_01_行业_成交量"
+    ],
+    "step_01_行业_涨跌幅": [
+      "step_01_行业_涨跌幅"
+    ],
+    "step_01_指数_上证指数": [
+      "step_01_指数_上证指数"
+    ],
+    "step_01_指数_沪深300": [],
+    "step_01_指数_深证成指": [],
+    "step_01_指数_创业板指": [
+      "step_01_指数_创业板指"
+    ],
+    "step_01_指数_中证500": [
+      "step_01_指数_中证500"
+    ],
+    "step_01_情绪_sentiment_0": [
+      "step_01_情绪_sentiment_0"
+    ],
+    "step_01_情绪_sentiment_1": [
+      "step_01_情绪_sentiment_1"
+    ],
+    "step_02_个股_开盘价": [],
+    "step_02_个股_收盘价": [],
+    "step_02_个股_最高价": [],
+    "step_02_个股_成交量": [],
+    "step_02_个股_涨跌幅": [
+      "step_02_个股_涨跌幅"
+    ],
+    "step_02_个股_成交量.1": [],
+    "step_02_个股_成交额": [],
+    "step_02_个股_换手率": [
+      "step_02_个股_换手率"
+    ],
+    "step_02_个股_振幅": [
+      "step_02_个股_振幅"
+    ],
+    "step_02_个股_流通市值": [],
+    "step_02_个股_RSI": [
+      "step_02_个股_RSI"
+    ],
+    "step_02_个股_MACD": [
+      "step_02_个股_MACD",
+      "step_02_个股_MACD_signal"
+    ],
+    "step_02_个股_MACD_signal": [
+      "step_02_个股_MACD_signal"
+    ],
+    "step_02_个股_BB_upper": [],
+    "step_02_个股_BB_middle": [],
+    "step_02_行业_开盘价": [],
+    "step_02_行业_收盘价": [],
+    "step_02_行业_最高价": [],
+    "step_02_行业_最低价": [],
+    "step_02_行业_成交量": [
+      "step_02_行业_成交量"
+    ],
+    "step_02_行业_涨跌幅": [
+      "step_02_行业_涨跌幅"
+    ],
+    "step_02_指数_上证指数": [
+      "step_02_指数_上证指数"
+    ],
+    "step_02_指数_沪深300": [
+      "step_02_指数_沪深300"
+    ],
+    "step_02_指数_深证成指": [],
+    "step_02_指数_创业板指": [
+      "step_02_指数_创业板指"
+    ],
+    "step_02_指数_中证500": [
+      "step_02_指数_中证500"
+    ],
+    "step_02_情绪_sentiment_0": [
+      "step_02_情绪_sentiment_0"
+    ],
+    "step_02_情绪_sentiment_1": [
+      "step_02_情绪_sentiment_1"
+    ],
+    "step_03_个股_开盘价": [],
+    "step_03_个股_收盘价": [],
+    "step_03_个股_最高价": [],
+    "step_03_个股_成交量": [
+      "step_03_个股_成交量"
+    ],
+    "step_03_个股_涨跌幅": [
+      "step_03_个股_涨跌幅"
+    ],
+    "step_03_个股_成交量.1": [],
+    "step_03_个股_成交额": [
+      "step_03_个股_成交额"
+    ],
+    "step_03_个股_换手率": [
+      "step_03_个股_换手率"
+    ],
+    "step_03_个股_振幅": [
+      "step_03_个股_振幅"
+    ],
+    "step_03_个股_流通市值": [],
+    "step_03_个股_RSI": [
+      "step_03_个股_RSI"
+    ],
+    "step_03_个股_MACD": [
+      "step_03_个股_MACD_signal"
+    ],
+    "step_03_个股_MACD_signal": [
+      "step_03_个股_MACD_signal"
+    ],
+    "step_03_个股_BB_upper": [],
+    "step_03_个股_BB_middle": [],
+    "step_03_行业_开盘价": [],
+    "step_03_行业_收盘价": [],
+    "step_03_行业_最高价": [],
+    "step_03_行业_最低价": [
+      "step_03_行业_最低价"
+    ],
+    "step_03_行业_成交量": [
+      "step_03_行业_成交量"
+    ],
+    "step_03_行业_涨跌幅": [
+      "step_03_行业_涨跌幅"
+    ],
+    "step_03_指数_上证指数": [
+      "step_03_指数_上证指数"
+    ],
+    "step_03_指数_沪深300": [
+      "step_03_指数_沪深300"
+    ],
+    "step_03_指数_深证成指": [],
+    "step_03_指数_创业板指": [
+      "step_03_指数_创业板指"
+    ],
+    "step_03_指数_中证500": [
+      "step_03_指数_中证500"
+    ],
+    "step_03_情绪_sentiment_0": [
+      "step_03_情绪_sentiment_0"
+    ],
+    "step_03_情绪_sentiment_1": [
+      "step_03_情绪_sentiment_1"
+    ],
+    "step_04_个股_开盘价": [],
+    "step_04_个股_收盘价": [],
+    "step_04_个股_最高价": [],
+    "step_04_个股_成交量": [
+      "step_04_个股_成交量"
+    ],
+    "step_04_个股_涨跌幅": [
+      "step_04_个股_涨跌幅"
+    ],
+    "step_04_个股_成交量.1": [],
+    "step_04_个股_成交额": [
+      "step_04_个股_成交额"
+    ],
+    "step_04_个股_换手率": [
+      "step_04_个股_换手率"
+    ],
+    "step_04_个股_振幅": [
+      "step_04_个股_振幅"
+    ],
+    "step_04_个股_流通市值": [],
+    "step_04_个股_RSI": [
+      "step_04_个股_RSI"
+    ],
+    "step_04_个股_MACD": [
+      "step_04_个股_MACD_signal"
+    ],
+    "step_04_个股_MACD_signal": [
+      "step_04_个股_MACD_signal"
+    ],
+    "step_04_个股_BB_upper": [],
+    "step_04_个股_BB_middle": [],
+    "step_04_行业_开盘价": [],
+    "step_04_行业_收盘价": [],
+    "step_04_行业_最高价": [],
+    "step_04_行业_最低价": [],
+    "step_04_行业_成交量": [
+      "step_04_行业_成交量"
+    ],
+    "step_04_行业_涨跌幅": [
+      "step_04_行业_涨跌幅"
+    ],
+    "step_04_指数_上证指数": [
+      "step_04_指数_上证指数"
+    ],
+    "step_04_指数_沪深300": [
+      "step_04_指数_沪深300"
+    ],
+    "step_04_指数_深证成指": [],
+    "step_04_指数_创业板指": [
+      "step_04_指数_创业板指"
+    ],
+    "step_04_指数_中证500": [
+      "step_04_指数_中证500"
+    ],
+    "step_04_情绪_sentiment_0": [
+      "step_04_情绪_sentiment_0"
+    ],
+    "step_04_情绪_sentiment_1": [
+      "step_04_情绪_sentiment_1"
+    ],
+    "step_05_个股_开盘价": [],
+    "step_05_个股_收盘价": [],
+    "step_05_个股_最高价": [],
+    "step_05_个股_成交量": [
+      "step_05_个股_成交量"
+    ],
+    "step_05_个股_涨跌幅": [
+      "step_05_个股_涨跌幅"
+    ],
+    "step_05_个股_成交量.1": [],
+    "step_05_个股_成交额": [
+      "step_05_个股_成交额"
+    ],
+    "step_05_个股_换手率": [
+      "step_05_个股_换手率"
+    ],
+    "step_05_个股_振幅": [
+      "step_05_个股_振幅"
+    ],
+    "step_05_个股_流通市值": [],
+    "step_05_个股_RSI": [
+      "step_05_个股_RSI"
+    ],
+    "step_05_个股_MACD": [
+      "step_05_个股_MACD"
+    ],
+    "step_05_个股_MACD_signal": [],
+    "step_05_个股_BB_upper": [],
+    "step_05_个股_BB_middle": [],
+    "step_05_行业_开盘价": [],
+    "step_05_行业_收盘价": [],
+    "step_05_行业_最高价": [],
+    "step_05_行业_最低价": [],
+    "step_05_行业_成交量": [
+      "step_05_行业_成交量"
+    ],
+    "step_05_行业_涨跌幅": [
+      "step_05_行业_涨跌幅"
+    ],
+    "step_05_指数_上证指数": [
+      "step_05_指数_上证指数"
+    ],
+    "step_05_指数_沪深300": [
+      "step_05_指数_沪深300"
+    ],
+    "step_05_指数_深证成指": [],
+    "step_05_指数_创业板指": [
+      "step_05_指数_创业板指"
+    ],
+    "step_05_指数_中证500": [],
+    "step_05_情绪_sentiment_0": [
+      "step_05_情绪_sentiment_0"
+    ],
+    "step_05_情绪_sentiment_1": [
+      "step_05_情绪_sentiment_1"
+    ],
+    "step_06_个股_开盘价": [],
+    "step_06_个股_收盘价": [],
+    "step_06_个股_最高价": [],
+    "step_06_个股_成交量": [],
+    "step_06_个股_涨跌幅": [
+      "step_06_个股_涨跌幅"
+    ],
+    "step_06_个股_成交量.1": [],
+    "step_06_个股_成交额": [
+      "step_06_个股_成交额"
+    ],
+    "step_06_个股_换手率": [
+      "step_06_个股_换手率"
+    ],
+    "step_06_个股_振幅": [
+      "step_06_个股_振幅"
+    ],
+    "step_06_个股_流通市值": [],
+    "step_06_个股_RSI": [
+      "step_06_个股_RSI"
+    ],
+    "step_06_个股_MACD": [],
+    "step_06_个股_MACD_signal": [],
+    "step_06_个股_BB_upper": [],
+    "step_06_个股_BB_middle": [],
+    "step_06_行业_开盘价": [],
+    "step_06_行业_收盘价": [],
+    "step_06_行业_最高价": [
+      "step_06_行业_最高价"
+    ],
+    "step_06_行业_最低价": [],
+    "step_06_行业_成交量": [
+      "step_06_行业_成交量"
+    ],
+    "step_06_行业_涨跌幅": [
+      "step_06_行业_涨跌幅"
+    ],
+    "step_06_指数_上证指数": [
+      "step_06_指数_上证指数"
+    ],
+    "step_06_指数_沪深300": [
+      "step_06_指数_沪深300"
+    ],
+    "step_06_指数_深证成指": [],
+    "step_06_指数_创业板指": [
+      "step_06_指数_创业板指"
+    ],
+    "step_06_指数_中证500": [],
+    "step_06_情绪_sentiment_0": [
+      "step_06_情绪_sentiment_0"
+    ],
+    "step_06_情绪_sentiment_1": [
+      "step_06_情绪_sentiment_1"
+    ],
+    "step_07_个股_开盘价": [],
+    "step_07_个股_收盘价": [],
+    "step_07_个股_最高价": [],
+    "step_07_个股_成交量": [],
+    "step_07_个股_涨跌幅": [
+      "step_07_个股_涨跌幅"
+    ],
+    "step_07_个股_成交量.1": [],
+    "step_07_个股_成交额": [
+      "step_07_个股_成交额"
+    ],
+    "step_07_个股_换手率": [
+      "step_07_个股_换手率"
+    ],
+    "step_07_个股_振幅": [
+      "step_07_个股_振幅"
+    ],
+    "step_07_个股_流通市值": [],
+    "step_07_个股_RSI": [
+      "step_07_个股_RSI"
+    ],
+    "step_07_个股_MACD": [
+      "step_07_个股_MACD"
+    ],
+    "step_07_个股_MACD_signal": [],
+    "step_07_个股_BB_upper": [],
+    "step_07_个股_BB_middle": [],
+    "step_07_行业_开盘价": [],
+    "step_07_行业_收盘价": [],
+    "step_07_行业_最高价": [],
+    "step_07_行业_最低价": [],
+    "step_07_行业_成交量": [
+      "step_07_行业_成交量"
+    ],
+    "step_07_行业_涨跌幅": [
+      "step_07_行业_涨跌幅"
+    ],
+    "step_07_指数_上证指数": [
+      "step_07_指数_上证指数"
+    ],
+    "step_07_指数_沪深300": [
+      "step_07_指数_沪深300"
+    ],
+    "step_07_指数_深证成指": [
+      "step_07_指数_深证成指"
+    ],
+    "step_07_指数_创业板指": [],
+    "step_07_指数_中证500": [],
+    "step_07_情绪_sentiment_0": [
+      "step_07_情绪_sentiment_0"
+    ],
+    "step_07_情绪_sentiment_1": [
+      "step_07_情绪_sentiment_1"
+    ],
+    "step_08_个股_开盘价": [],
+    "step_08_个股_收盘价": [],
+    "step_08_个股_最高价": [],
+    "step_08_个股_成交量": [
+      "step_08_个股_成交量"
+    ],
+    "step_08_个股_涨跌幅": [
+      "step_08_个股_涨跌幅"
+    ],
+    "step_08_个股_成交量.1": [],
+    "step_08_个股_成交额": [
+      "step_08_个股_成交额"
+    ],
+    "step_08_个股_换手率": [
+      "step_08_个股_换手率"
+    ],
+    "step_08_个股_振幅": [
+      "step_08_个股_振幅"
+    ],
+    "step_08_个股_流通市值": [],
+    "step_08_个股_RSI": [
+      "step_08_个股_RSI"
+    ],
+    "step_08_个股_MACD": [
+      "step_08_个股_MACD"
+    ],
+    "step_08_个股_MACD_signal": [],
+    "step_08_个股_BB_upper": [],
+    "step_08_个股_BB_middle": [],
+    "step_08_行业_开盘价": [],
+    "step_08_行业_收盘价": [],
+    "step_08_行业_最高价": [],
+    "step_08_行业_最低价": [],
+    "step_08_行业_成交量": [
+      "step_08_行业_成交量"
+    ],
+    "step_08_行业_涨跌幅": [
+      "step_08_行业_涨跌幅"
+    ],
+    "step_08_指数_上证指数": [
+      "step_08_指数_上证指数"
+    ],
+    "step_08_指数_沪深300": [
+      "step_08_指数_沪深300"
+    ],
+    "step_08_指数_深证成指": [
+      "step_08_指数_深证成指"
+    ],
+    "step_08_指数_创业板指": [],
+    "step_08_指数_中证500": [],
+    "step_08_情绪_sentiment_0": [
+      "step_08_情绪_sentiment_0"
+    ],
+    "step_08_情绪_sentiment_1": [
+      "step_08_情绪_sentiment_1"
+    ],
+    "step_09_个股_开盘价": [],
+    "step_09_个股_收盘价": [],
+    "step_09_个股_最高价": [],
+    "step_09_个股_成交量": [
+      "step_09_个股_成交量"
+    ],
+    "step_09_个股_涨跌幅": [
+      "step_09_个股_涨跌幅"
+    ],
+    "step_09_个股_成交量.1": [],
+    "step_09_个股_成交额": [
+      "step_09_个股_成交额"
+    ],
+    "step_09_个股_换手率": [
+      "step_09_个股_换手率"
+    ],
+    "step_09_个股_振幅": [
+      "step_09_个股_振幅"
+    ],
+    "step_09_个股_流通市值": [],
+    "step_09_个股_RSI": [
+      "step_09_个股_RSI"
+    ],
+    "step_09_个股_MACD": [
+      "step_09_个股_MACD",
+      "step_09_个股_MACD_signal"
+    ],
+    "step_09_个股_MACD_signal": [
+      "step_09_个股_MACD_signal"
+    ],
+    "step_09_个股_BB_upper": [],
+    "step_09_个股_BB_middle": [],
+    "step_09_行业_开盘价": [],
+    "step_09_行业_收盘价": [],
+    "step_09_行业_最高价": [],
+    "step_09_行业_最低价": [],
+    "step_09_行业_成交量": [
+      "step_09_行业_成交量"
+    ],
+    "step_09_行业_涨跌幅": [
+      "step_09_行业_涨跌幅"
+    ],
+    "step_09_指数_上证指数": [
+      "step_09_指数_上证指数"
+    ],
+    "step_09_指数_沪深300": [
+      "step_09_指数_沪深300"
+    ],
+    "step_09_指数_深证成指": [
+      "step_09_指数_深证成指"
+    ],
+    "step_09_指数_创业板指": [],
+    "step_09_指数_中证500": [],
+    "step_09_情绪_sentiment_0": [
+      "step_09_情绪_sentiment_0"
+    ],
+    "step_09_情绪_sentiment_1": [
+      "step_09_情绪_sentiment_1"
+    ],
+    "step_10_个股_开盘价": [],
+    "step_10_个股_收盘价": [],
+    "step_10_个股_最高价": [],
+    "step_10_个股_成交量": [
+      "step_10_个股_成交量"
+    ],
+    "step_10_个股_涨跌幅": [
+      "step_10_个股_涨跌幅"
+    ],
+    "step_10_个股_成交量.1": [],
+    "step_10_个股_成交额": [
+      "step_10_个股_成交额"
+    ],
+    "step_10_个股_换手率": [
+      "step_10_个股_换手率"
+    ],
+    "step_10_个股_振幅": [
+      "step_10_个股_振幅"
+    ],
+    "step_10_个股_流通市值": [],
+    "step_10_个股_RSI": [
+      "step_10_个股_RSI"
+    ],
+    "step_10_个股_MACD": [
+      "step_10_个股_MACD",
+      "step_10_个股_MACD_signal"
+    ],
+    "step_10_个股_MACD_signal": [
+      "step_10_个股_MACD_signal"
+    ],
+    "step_10_个股_BB_upper": [],
+    "step_10_个股_BB_middle": [],
+    "step_10_行业_开盘价": [
+      "step_10_行业_开盘价"
+    ],
+    "step_10_行业_收盘价": [],
+    "step_10_行业_最高价": [],
+    "step_10_行业_最低价": [],
+    "step_10_行业_成交量": [
+      "step_10_行业_成交量"
+    ],
+    "step_10_行业_涨跌幅": [
+      "step_10_行业_涨跌幅"
+    ],
+    "step_10_指数_上证指数": [
+      "step_10_指数_上证指数"
+    ],
+    "step_10_指数_沪深300": [
+      "step_10_指数_沪深300"
+    ],
+    "step_10_指数_深证成指": [
+      "step_10_指数_深证成指"
+    ],
+    "step_10_指数_创业板指": [],
+    "step_10_指数_中证500": [],
+    "step_10_情绪_sentiment_0": [
+      "step_10_情绪_sentiment_0"
+    ],
+    "step_10_情绪_sentiment_1": [
+      "step_10_情绪_sentiment_1"
+    ],
+    "step_11_个股_开盘价": [],
+    "step_11_个股_收盘价": [],
+    "step_11_个股_最高价": [],
+    "step_11_个股_成交量": [
+      "step_11_个股_成交量"
+    ],
+    "step_11_个股_涨跌幅": [
+      "step_11_个股_涨跌幅"
+    ],
+    "step_11_个股_成交量.1": [],
+    "step_11_个股_成交额": [
+      "step_11_个股_成交额"
+    ],
+    "step_11_个股_换手率": [
+      "step_11_个股_换手率"
+    ],
+    "step_11_个股_振幅": [
+      "step_11_个股_振幅"
+    ],
+    "step_11_个股_流通市值": [
+      "step_11_个股_流通市值"
+    ],
+    "step_11_个股_RSI": [
+      "step_11_个股_RSI"
+    ],
+    "step_11_个股_MACD": [
+      "step_11_个股_MACD",
+      "step_11_个股_MACD_signal"
+    ],
+    "step_11_个股_MACD_signal": [
+      "step_11_个股_MACD_signal"
+    ],
+    "step_11_个股_BB_upper": [],
+    "step_11_个股_BB_middle": [],
+    "step_11_行业_开盘价": [],
+    "step_11_行业_收盘价": [],
+    "step_11_行业_最高价": [],
+    "step_11_行业_最低价": [],
+    "step_11_行业_成交量": [
+      "step_11_行业_成交量"
+    ],
+    "step_11_行业_涨跌幅": [
+      "step_11_行业_涨跌幅"
+    ],
+    "step_11_指数_上证指数": [
+      "step_11_指数_上证指数"
+    ],
+    "step_11_指数_沪深300": [],
+    "step_11_指数_深证成指": [],
+    "step_11_指数_创业板指": [],
+    "step_11_指数_中证500": [
+      "step_11_指数_中证500"
+    ],
+    "step_11_情绪_sentiment_0": [
+      "step_11_情绪_sentiment_0"
+    ],
+    "step_11_情绪_sentiment_1": [
+      "step_11_情绪_sentiment_1"
+    ],
+    "step_12_个股_开盘价": [],
+    "step_12_个股_收盘价": [],
+    "step_12_个股_最高价": [],
+    "step_12_个股_成交量": [
+      "step_12_个股_成交量"
+    ],
+    "step_12_个股_涨跌幅": [
+      "step_12_个股_涨跌幅"
+    ],
+    "step_12_个股_成交量.1": [],
+    "step_12_个股_成交额": [
+      "step_12_个股_成交额"
+    ],
+    "step_12_个股_换手率": [
+      "step_12_个股_换手率"
+    ],
+    "step_12_个股_振幅": [
+      "step_12_个股_振幅"
+    ],
+    "step_12_个股_流通市值": [],
+    "step_12_个股_RSI": [
+      "step_12_个股_RSI"
+    ],
+    "step_12_个股_MACD": [
+      "step_12_个股_MACD_signal"
+    ],
+    "step_12_个股_MACD_signal": [
+      "step_12_个股_MACD_signal"
+    ],
+    "step_12_个股_BB_upper": [],
+    "step_12_个股_BB_middle": [],
+    "step_12_行业_开盘价": [],
+    "step_12_行业_收盘价": [],
+    "step_12_行业_最高价": [
+      "step_12_行业_最高价"
+    ],
+    "step_12_行业_最低价": [],
+    "step_12_行业_成交量": [
+      "step_12_行业_成交量"
+    ],
+    "step_12_行业_涨跌幅": [
+      "step_12_行业_涨跌幅"
+    ],
+    "step_12_指数_上证指数": [],
+    "step_12_指数_沪深300": [
+      "step_12_指数_沪深300"
+    ],
+    "step_12_指数_深证成指": [
+      "step_12_指数_深证成指"
+    ],
+    "step_12_指数_创业板指": [],
+    "step_12_指数_中证500": [],
+    "step_12_情绪_sentiment_0": [
+      "step_12_情绪_sentiment_0"
+    ],
+    "step_12_情绪_sentiment_1": [
+      "step_12_情绪_sentiment_1"
+    ],
+    "step_13_个股_开盘价": [],
+    "step_13_个股_收盘价": [],
+    "step_13_个股_最高价": [],
+    "step_13_个股_成交量": [
+      "step_13_个股_成交量"
+    ],
+    "step_13_个股_涨跌幅": [
+      "step_13_个股_涨跌幅"
+    ],
+    "step_13_个股_成交量.1": [],
+    "step_13_个股_成交额": [
+      "step_13_个股_成交额"
+    ],
+    "step_13_个股_换手率": [
+      "step_13_个股_换手率"
+    ],
+    "step_13_个股_振幅": [
+      "step_13_个股_振幅"
+    ],
+    "step_13_个股_流通市值": [],
+    "step_13_个股_RSI": [
+      "step_13_个股_RSI"
+    ],
+    "step_13_个股_MACD": [],
+    "step_13_个股_MACD_signal": [],
+    "step_13_个股_BB_upper": [],
+    "step_13_个股_BB_middle": [],
+    "step_13_行业_开盘价": [],
+    "step_13_行业_收盘价": [],
+    "step_13_行业_最高价": [],
+    "step_13_行业_最低价": [],
+    "step_13_行业_成交量": [
+      "step_13_行业_成交量"
+    ],
+    "step_13_行业_涨跌幅": [
+      "step_13_行业_涨跌幅"
+    ],
+    "step_13_指数_上证指数": [
+      "step_13_指数_上证指数"
+    ],
+    "step_13_指数_沪深300": [
+      "step_13_指数_沪深300"
+    ],
+    "step_13_指数_深证成指": [],
+    "step_13_指数_创业板指": [],
+    "step_13_指数_中证500": [
+      "step_13_指数_中证500"
+    ],
+    "step_13_情绪_sentiment_0": [
+      "step_13_情绪_sentiment_0"
+    ],
+    "step_13_情绪_sentiment_1": [
+      "step_13_情绪_sentiment_1"
+    ],
+    "step_14_个股_开盘价": [],
+    "step_14_个股_收盘价": [],
+    "step_14_个股_最高价": [],
+    "step_14_个股_成交量": [
+      "step_14_个股_成交量"
+    ],
+    "step_14_个股_涨跌幅": [
+      "step_14_个股_涨跌幅"
+    ],
+    "step_14_个股_成交量.1": [],
+    "step_14_个股_成交额": [
+      "step_14_个股_成交额"
+    ],
+    "step_14_个股_换手率": [
+      "step_14_个股_换手率"
+    ],
+    "step_14_个股_振幅": [
+      "step_14_个股_振幅"
+    ],
+    "step_14_个股_流通市值": [],
+    "step_14_个股_RSI": [
+      "step_14_个股_RSI"
+    ],
+    "step_14_个股_MACD": [
+      "step_14_个股_MACD_signal"
+    ],
+    "step_14_个股_MACD_signal": [
+      "step_14_个股_MACD_signal"
+    ],
+    "step_14_个股_BB_upper": [],
+    "step_14_个股_BB_middle": [],
+    "step_14_行业_开盘价": [],
+    "step_14_行业_收盘价": [],
+    "step_14_行业_最高价": [],
+    "step_14_行业_最低价": [],
+    "step_14_行业_成交量": [
+      "step_14_行业_成交量"
+    ],
+    "step_14_行业_涨跌幅": [
+      "step_14_行业_涨跌幅"
+    ],
+    "step_14_指数_上证指数": [
+      "step_14_指数_上证指数"
+    ],
+    "step_14_指数_沪深300": [
+      "step_14_指数_沪深300"
+    ],
+    "step_14_指数_深证成指": [],
+    "step_14_指数_创业板指": [
+      "step_14_指数_创业板指"
+    ],
+    "step_14_指数_中证500": [],
+    "step_14_情绪_sentiment_0": [
+      "step_14_情绪_sentiment_0"
+    ],
+    "step_14_情绪_sentiment_1": [
+      "step_14_情绪_sentiment_1"
+    ],
+    "step_15_个股_开盘价": [],
+    "step_15_个股_收盘价": [],
+    "step_15_个股_最高价": [],
+    "step_15_个股_成交量": [],
+    "step_15_个股_涨跌幅": [
+      "step_15_个股_涨跌幅"
+    ],
+    "step_15_个股_成交量.1": [],
+    "step_15_个股_成交额": [
+      "step_15_个股_成交额"
+    ],
+    "step_15_个股_换手率": [
+      "step_15_个股_换手率"
+    ],
+    "step_15_个股_振幅": [
+      "step_15_个股_振幅"
+    ],
+    "step_15_个股_流通市值": [],
+    "step_15_个股_RSI": [
+      "step_15_个股_RSI"
+    ],
+    "step_15_个股_MACD": [
+      "step_15_个股_MACD"
+    ],
+    "step_15_个股_MACD_signal": [],
+    "step_15_个股_BB_upper": [],
+    "step_15_个股_BB_middle": [],
+    "step_15_行业_开盘价": [],
+    "step_15_行业_收盘价": [],
+    "step_15_行业_最高价": [],
+    "step_15_行业_最低价": [
+      "step_15_行业_最低价"
+    ],
+    "step_15_行业_成交量": [
+      "step_15_行业_成交量"
+    ],
+    "step_15_行业_涨跌幅": [
+      "step_15_行业_涨跌幅"
+    ],
+    "step_15_指数_上证指数": [
+      "step_15_指数_上证指数"
+    ],
+    "step_15_指数_沪深300": [
+      "step_15_指数_沪深300"
+    ],
+    "step_15_指数_深证成指": [],
+    "step_15_指数_创业板指": [],
+    "step_15_指数_中证500": [
+      "step_15_指数_中证500"
+    ],
+    "step_15_情绪_sentiment_0": [
+      "step_15_情绪_sentiment_0"
+    ],
+    "step_15_情绪_sentiment_1": [
+      "step_15_情绪_sentiment_1"
+    ],
+    "step_16_个股_开盘价": [],
+    "step_16_个股_收盘价": [],
+    "step_16_个股_最高价": [],
+    "step_16_个股_成交量": [
+      "step_16_个股_成交量"
+    ],
+    "step_16_个股_涨跌幅": [
+      "step_16_个股_涨跌幅"
+    ],
+    "step_16_个股_成交量.1": [],
+    "step_16_个股_成交额": [
+      "step_16_个股_成交额"
+    ],
+    "step_16_个股_换手率": [
+      "step_16_个股_换手率"
+    ],
+    "step_16_个股_振幅": [
+      "step_16_个股_振幅"
+    ],
+    "step_16_个股_流通市值": [],
+    "step_16_个股_RSI": [
+      "step_16_个股_RSI"
+    ],
+    "step_16_个股_MACD": [],
+    "step_16_个股_MACD_signal": [],
+    "step_16_个股_BB_upper": [],
+    "step_16_个股_BB_middle": [],
+    "step_16_行业_开盘价": [],
+    "step_16_行业_收盘价": [],
+    "step_16_行业_最高价": [],
+    "step_16_行业_最低价": [],
+    "step_16_行业_成交量": [
+      "step_16_行业_成交量"
+    ],
+    "step_16_行业_涨跌幅": [
+      "step_16_行业_涨跌幅"
+    ],
+    "step_16_指数_上证指数": [
+      "step_16_指数_上证指数"
+    ],
+    "step_16_指数_沪深300": [
+      "step_16_指数_沪深300"
+    ],
+    "step_16_指数_深证成指": [],
+    "step_16_指数_创业板指": [
+      "step_16_指数_创业板指"
+    ],
+    "step_16_指数_中证500": [],
+    "step_16_情绪_sentiment_0": [
+      "step_16_情绪_sentiment_0"
+    ],
+    "step_16_情绪_sentiment_1": [
+      "step_16_情绪_sentiment_1"
+    ],
+    "step_17_个股_开盘价": [],
+    "step_17_个股_收盘价": [],
+    "step_17_个股_最高价": [],
+    "step_17_个股_成交量": [
+      "step_17_个股_成交量"
+    ],
+    "step_17_个股_涨跌幅": [
+      "step_17_个股_涨跌幅"
+    ],
+    "step_17_个股_成交量.1": [],
+    "step_17_个股_成交额": [
+      "step_17_个股_成交额"
+    ],
+    "step_17_个股_换手率": [
+      "step_17_个股_换手率"
+    ],
+    "step_17_个股_振幅": [
+      "step_17_个股_振幅"
+    ],
+    "step_17_个股_流通市值": [],
+    "step_17_个股_RSI": [
+      "step_17_个股_RSI"
+    ],
+    "step_17_个股_MACD": [
+      "step_17_个股_MACD",
+      "step_17_个股_MACD_signal"
+    ],
+    "step_17_个股_MACD_signal": [
+      "step_17_个股_MACD_signal"
+    ],
+    "step_17_个股_BB_upper": [],
+    "step_17_个股_BB_middle": [],
+    "step_17_行业_开盘价": [],
+    "step_17_行业_收盘价": [],
+    "step_17_行业_最高价": [],
+    "step_17_行业_最低价": [],
+    "step_17_行业_成交量": [
+      "step_17_行业_成交量"
+    ],
+    "step_17_行业_涨跌幅": [
+      "step_17_行业_涨跌幅"
+    ],
+    "step_17_指数_上证指数": [
+      "step_17_指数_上证指数"
+    ],
+    "step_17_指数_沪深300": [
+      "step_17_指数_沪深300"
+    ],
+    "step_17_指数_深证成指": [],
+    "step_17_指数_创业板指": [
+      "step_17_指数_创业板指"
+    ],
+    "step_17_指数_中证500": [],
+    "step_17_情绪_sentiment_0": [
+      "step_17_情绪_sentiment_0"
+    ],
+    "step_17_情绪_sentiment_1": [
+      "step_17_情绪_sentiment_1"
+    ],
+    "step_18_个股_开盘价": [],
+    "step_18_个股_收盘价": [],
+    "step_18_个股_最高价": [],
+    "step_18_个股_成交量": [],
+    "step_18_个股_涨跌幅": [
+      "step_18_个股_涨跌幅"
+    ],
+    "step_18_个股_成交量.1": [],
+    "step_18_个股_成交额": [],
+    "step_18_个股_换手率": [
+      "step_18_个股_换手率"
+    ],
+    "step_18_个股_振幅": [
+      "step_18_个股_振幅"
+    ],
+    "step_18_个股_流通市值": [],
+    "step_18_个股_RSI": [
+      "step_18_个股_RSI"
+    ],
+    "step_18_个股_MACD": [
+      "step_18_个股_MACD_signal"
+    ],
+    "step_18_个股_MACD_signal": [
+      "step_18_个股_MACD_signal"
+    ],
+    "step_18_个股_BB_upper": [],
+    "step_18_个股_BB_middle": [],
+    "step_18_行业_开盘价": [],
+    "step_18_行业_收盘价": [],
+    "step_18_行业_最高价": [],
+    "step_18_行业_最低价": [
+      "step_18_行业_最低价"
+    ],
+    "step_18_行业_成交量": [
+      "step_18_行业_成交量"
+    ],
+    "step_18_行业_涨跌幅": [
+      "step_18_行业_涨跌幅"
+    ],
+    "step_18_指数_上证指数": [
+      "step_18_指数_上证指数"
+    ],
+    "step_18_指数_沪深300": [],
+    "step_18_指数_深证成指": [
+      "step_18_指数_深证成指"
+    ],
+    "step_18_指数_创业板指": [],
+    "step_18_指数_中证500": [],
+    "step_18_情绪_sentiment_0": [
+      "step_18_情绪_sentiment_0"
+    ],
+    "step_18_情绪_sentiment_1": [
+      "step_18_情绪_sentiment_1"
+    ],
+    "step_19_个股_开盘价": [],
+    "step_19_个股_收盘价": [],
+    "step_19_个股_最高价": [],
+    "step_19_个股_成交量": [],
+    "step_19_个股_涨跌幅": [
+      "step_19_个股_涨跌幅"
+    ],
+    "step_19_个股_成交量.1": [],
+    "step_19_个股_成交额": [],
+    "step_19_个股_换手率": [
+      "step_19_个股_换手率"
+    ],
+    "step_19_个股_振幅": [
+      "step_19_个股_振幅"
+    ],
+    "step_19_个股_流通市值": [],
+    "step_19_个股_RSI": [
+      "step_19_个股_RSI"
+    ],
+    "step_19_个股_MACD": [],
+    "step_19_个股_MACD_signal": [],
+    "step_19_个股_BB_upper": [],
+    "step_19_个股_BB_middle": [],
+    "step_19_行业_开盘价": [],
+    "step_19_行业_收盘价": [],
+    "step_19_行业_最高价": [],
+    "step_19_行业_最低价": [],
+    "step_19_行业_成交量": [
+      "step_19_行业_成交量"
+    ],
+    "step_19_行业_涨跌幅": [
+      "step_19_行业_涨跌幅"
+    ],
+    "step_19_指数_上证指数": [],
+    "step_19_指数_沪深300": [
+      "step_19_指数_沪深300"
+    ],
+    "step_19_指数_深证成指": [],
+    "step_19_指数_创业板指": [],
+    "step_19_指数_中证500": [
+      "step_19_指数_中证500"
+    ],
+    "step_19_情绪_sentiment_0": [
+      "step_19_情绪_sentiment_0"
+    ],
+    "step_19_情绪_sentiment_1": [
+      "step_19_情绪_sentiment_1"
+    ],
+    "step_20_个股_开盘价": [],
+    "step_20_个股_收盘价": [],
+    "step_20_个股_最高价": [],
+    "step_20_个股_成交量": [],
+    "step_20_个股_涨跌幅": [
+      "step_20_个股_涨跌幅"
+    ],
+    "step_20_个股_成交量.1": [],
+    "step_20_个股_成交额": [
+      "step_20_个股_成交额"
+    ],
+    "step_20_个股_换手率": [
+      "step_20_个股_换手率"
+    ],
+    "step_20_个股_振幅": [
+      "step_20_个股_振幅"
+    ],
+    "step_20_个股_流通市值": [],
+    "step_20_个股_RSI": [
+      "step_20_个股_RSI"
+    ],
+    "step_20_个股_MACD": [
+      "step_20_个股_MACD"
+    ],
+    "step_20_个股_MACD_signal": [],
+    "step_20_个股_BB_upper": [],
+    "step_20_个股_BB_middle": [],
+    "step_20_行业_开盘价": [],
+    "step_20_行业_收盘价": [],
+    "step_20_行业_最高价": [],
+    "step_20_行业_最低价": [],
+    "step_20_行业_成交量": [
+      "step_20_行业_成交量"
+    ],
+    "step_20_行业_涨跌幅": [
+      "step_20_行业_涨跌幅"
+    ],
+    "step_20_指数_上证指数": [
+      "step_20_指数_上证指数"
+    ],
+    "step_20_指数_沪深300": [
+      "step_20_指数_沪深300"
+    ],
+    "step_20_指数_深证成指": [
+      "step_20_指数_深证成指"
+    ],
+    "step_20_指数_创业板指": [],
+    "step_20_指数_中证500": [],
+    "step_20_情绪_sentiment_0": [
+      "step_20_情绪_sentiment_0"
+    ],
+    "step_20_情绪_sentiment_1": [
+      "step_20_情绪_sentiment_1"
+    ],
+    "step_21_个股_开盘价": [],
+    "step_21_个股_收盘价": [],
+    "step_21_个股_最高价": [],
+    "step_21_个股_成交量": [
+      "step_21_个股_成交量"
+    ],
+    "step_21_个股_涨跌幅": [
+      "step_21_个股_涨跌幅"
+    ],
+    "step_21_个股_成交量.1": [],
+    "step_21_个股_成交额": [
+      "step_21_个股_成交额"
+    ],
+    "step_21_个股_换手率": [
+      "step_21_个股_换手率"
+    ],
+    "step_21_个股_振幅": [
+      "step_21_个股_振幅"
+    ],
+    "step_21_个股_流通市值": [],
+    "step_21_个股_RSI": [
+      "step_21_个股_RSI"
+    ],
+    "step_21_个股_MACD": [],
+    "step_21_个股_MACD_signal": [],
+    "step_21_个股_BB_upper": [],
+    "step_21_个股_BB_middle": [],
+    "step_21_行业_开盘价": [],
+    "step_21_行业_收盘价": [],
+    "step_21_行业_最高价": [
+      "step_21_行业_最高价"
+    ],
+    "step_21_行业_最低价": [],
+    "step_21_行业_成交量": [
+      "step_21_行业_成交量"
+    ],
+    "step_21_行业_涨跌幅": [
+      "step_21_行业_涨跌幅"
+    ],
+    "step_21_指数_上证指数": [],
+    "step_21_指数_沪深300": [
+      "step_21_指数_沪深300"
+    ],
+    "step_21_指数_深证成指": [],
+    "step_21_指数_创业板指": [
+      "step_21_指数_创业板指"
+    ],
+    "step_21_指数_中证500": [],
+    "step_21_情绪_sentiment_0": [
+      "step_21_情绪_sentiment_0"
+    ],
+    "step_21_情绪_sentiment_1": [
+      "step_21_情绪_sentiment_1"
+    ],
+    "step_22_个股_开盘价": [],
+    "step_22_个股_收盘价": [],
+    "step_22_个股_最高价": [],
+    "step_22_个股_成交量": [
+      "step_22_个股_成交量"
+    ],
+    "step_22_个股_涨跌幅": [
+      "step_22_个股_涨跌幅"
+    ],
+    "step_22_个股_成交量.1": [],
+    "step_22_个股_成交额": [
+      "step_22_个股_成交额"
+    ],
+    "step_22_个股_换手率": [
+      "step_22_个股_换手率"
+    ],
+    "step_22_个股_振幅": [
+      "step_22_个股_振幅"
+    ],
+    "step_22_个股_流通市值": [],
+    "step_22_个股_RSI": [
+      "step_22_个股_RSI"
+    ],
+    "step_22_个股_MACD": [
+      "step_22_个股_MACD"
+    ],
+    "step_22_个股_MACD_signal": [],
+    "step_22_个股_BB_upper": [],
+    "step_22_个股_BB_middle": [],
+    "step_22_行业_开盘价": [],
+    "step_22_行业_收盘价": [],
+    "step_22_行业_最高价": [],
+    "step_22_行业_最低价": [],
+    "step_22_行业_成交量": [
+      "step_22_行业_成交量"
+    ],
+    "step_22_行业_涨跌幅": [
+      "step_22_行业_涨跌幅"
+    ],
+    "step_22_指数_上证指数": [
+      "step_22_指数_上证指数"
+    ],
+    "step_22_指数_沪深300": [
+      "step_22_指数_沪深300"
+    ],
+    "step_22_指数_深证成指": [
+      "step_22_指数_深证成指"
+    ],
+    "step_22_指数_创业板指": [],
+    "step_22_指数_中证500": [],
+    "step_22_情绪_sentiment_0": [
+      "step_22_情绪_sentiment_0"
+    ],
+    "step_22_情绪_sentiment_1": [
+      "step_22_情绪_sentiment_1"
+    ],
+    "step_23_个股_开盘价": [],
+    "step_23_个股_收盘价": [],
+    "step_23_个股_最高价": [],
+    "step_23_个股_成交量": [],
+    "step_23_个股_涨跌幅": [
+      "step_23_个股_涨跌幅"
+    ],
+    "step_23_个股_成交量.1": [],
+    "step_23_个股_成交额": [
+      "step_23_个股_成交额"
+    ],
+    "step_23_个股_换手率": [
+      "step_23_个股_换手率"
+    ],
+    "step_23_个股_振幅": [
+      "step_23_个股_振幅"
+    ],
+    "step_23_个股_流通市值": [],
+    "step_23_个股_RSI": [
+      "step_23_个股_RSI"
+    ],
+    "step_23_个股_MACD": [
+      "step_23_个股_MACD_signal"
+    ],
+    "step_23_个股_MACD_signal": [
+      "step_23_个股_MACD_signal"
+    ],
+    "step_23_个股_BB_upper": [],
+    "step_23_个股_BB_middle": [],
+    "step_23_行业_开盘价": [],
+    "step_23_行业_收盘价": [
+      "step_23_行业_收盘价"
+    ],
+    "step_23_行业_最高价": [],
+    "step_23_行业_最低价": [],
+    "step_23_行业_成交量": [
+      "step_23_行业_成交量"
+    ],
+    "step_23_行业_涨跌幅": [
+      "step_23_行业_涨跌幅"
+    ],
+    "step_23_指数_上证指数": [
+      "step_23_指数_上证指数"
+    ],
+    "step_23_指数_沪深300": [
+      "step_23_指数_沪深300"
+    ],
+    "step_23_指数_深证成指": [],
+    "step_23_指数_创业板指": [
+      "step_23_指数_创业板指"
+    ],
+    "step_23_指数_中证500": [],
+    "step_23_情绪_sentiment_0": [
+      "step_23_情绪_sentiment_0"
+    ],
+    "step_23_情绪_sentiment_1": [
+      "step_23_情绪_sentiment_1"
+    ],
+    "step_24_个股_开盘价": [],
+    "step_24_个股_收盘价": [],
+    "step_24_个股_最高价": [],
+    "step_24_个股_成交量": [
+      "step_24_个股_成交量"
+    ],
+    "step_24_个股_涨跌幅": [
+      "step_24_个股_涨跌幅"
+    ],
+    "step_24_个股_成交量.1": [],
+    "step_24_个股_成交额": [
+      "step_24_个股_成交额"
+    ],
+    "step_24_个股_换手率": [
+      "step_24_个股_换手率"
+    ],
+    "step_24_个股_振幅": [
+      "step_24_个股_振幅"
+    ],
+    "step_24_个股_流通市值": [],
+    "step_24_个股_RSI": [
+      "step_24_个股_RSI"
+    ],
+    "step_24_个股_MACD": [
+      "step_24_个股_MACD"
+    ],
+    "step_24_个股_MACD_signal": [],
+    "step_24_个股_BB_upper": [],
+    "step_24_个股_BB_middle": [],
+    "step_24_行业_开盘价": [],
+    "step_24_行业_收盘价": [],
+    "step_24_行业_最高价": [],
+    "step_24_行业_最低价": [],
+    "step_24_行业_成交量": [
+      "step_24_行业_成交量"
+    ],
+    "step_24_行业_涨跌幅": [
+      "step_24_行业_涨跌幅"
+    ],
+    "step_24_指数_上证指数": [
+      "step_24_指数_上证指数"
+    ],
+    "step_24_指数_沪深300": [
+      "step_24_指数_沪深300"
+    ],
+    "step_24_指数_深证成指": [],
+    "step_24_指数_创业板指": [],
+    "step_24_指数_中证500": [
+      "step_24_指数_中证500"
+    ],
+    "step_24_情绪_sentiment_0": [
+      "step_24_情绪_sentiment_0"
+    ],
+    "step_24_情绪_sentiment_1": [
+      "step_24_情绪_sentiment_1"
+    ],
+    "step_25_个股_开盘价": [],
+    "step_25_个股_收盘价": [],
+    "step_25_个股_最高价": [],
+    "step_25_个股_成交量": [
+      "step_25_个股_成交量"
+    ],
+    "step_25_个股_涨跌幅": [
+      "step_25_个股_涨跌幅"
+    ],
+    "step_25_个股_成交量.1": [],
+    "step_25_个股_成交额": [
+      "step_25_个股_成交额"
+    ],
+    "step_25_个股_换手率": [
+      "step_25_个股_换手率"
+    ],
+    "step_25_个股_振幅": [
+      "step_25_个股_振幅"
+    ],
+    "step_25_个股_流通市值": [],
+    "step_25_个股_RSI": [
+      "step_25_个股_RSI"
+    ],
+    "step_25_个股_MACD": [
+      "step_25_个股_MACD"
+    ],
+    "step_25_个股_MACD_signal": [],
+    "step_25_个股_BB_upper": [],
+    "step_25_个股_BB_middle": [],
+    "step_25_行业_开盘价": [],
+    "step_25_行业_收盘价": [
+      "step_25_行业_收盘价"
+    ],
+    "step_25_行业_最高价": [],
+    "step_25_行业_最低价": [],
+    "step_25_行业_成交量": [
+      "step_25_行业_成交量"
+    ],
+    "step_25_行业_涨跌幅": [
+      "step_25_行业_涨跌幅"
+    ],
+    "step_25_指数_上证指数": [
+      "step_25_指数_上证指数"
+    ],
+    "step_25_指数_沪深300": [
+      "step_25_指数_沪深300"
+    ],
+    "step_25_指数_深证成指": [
+      "step_25_指数_深证成指"
+    ],
+    "step_25_指数_创业板指": [],
+    "step_25_指数_中证500": [],
+    "step_25_情绪_sentiment_0": [
+      "step_25_情绪_sentiment_0"
+    ],
+    "step_25_情绪_sentiment_1": [
+      "step_25_情绪_sentiment_1"
+    ],
+    "step_26_个股_开盘价": [],
+    "step_26_个股_收盘价": [],
+    "step_26_个股_最高价": [],
+    "step_26_个股_成交量": [
+      "step_26_个股_成交量"
+    ],
+    "step_26_个股_涨跌幅": [
+      "step_26_个股_涨跌幅"
+    ],
+    "step_26_个股_成交量.1": [],
+    "step_26_个股_成交额": [
+      "step_26_个股_成交额"
+    ],
+    "step_26_个股_换手率": [
+      "step_26_个股_换手率"
+    ],
+    "step_26_个股_振幅": [
+      "step_26_个股_振幅"
+    ],
+    "step_26_个股_流通市值": [],
+    "step_26_个股_RSI": [
+      "step_26_个股_RSI"
+    ],
+    "step_26_个股_MACD": [
+      "step_26_个股_MACD",
+      "step_26_个股_MACD_signal"
+    ],
+    "step_26_个股_MACD_signal": [
+      "step_26_个股_MACD_signal"
+    ],
+    "step_26_个股_BB_upper": [],
+    "step_26_个股_BB_middle": [],
+    "step_26_行业_开盘价": [],
+    "step_26_行业_收盘价": [],
+    "step_26_行业_最高价": [],
+    "step_26_行业_最低价": [],
+    "step_26_行业_成交量": [
+      "step_26_行业_成交量"
+    ],
+    "step_26_行业_涨跌幅": [
+      "step_26_行业_涨跌幅"
+    ],
+    "step_26_指数_上证指数": [
+      "step_26_指数_上证指数"
+    ],
+    "step_26_指数_沪深300": [
+      "step_26_指数_沪深300"
+    ],
+    "step_26_指数_深证成指": [],
+    "step_26_指数_创业板指": [],
+    "step_26_指数_中证500": [],
+    "step_26_情绪_sentiment_0": [
+      "step_26_情绪_sentiment_0"
+    ],
+    "step_26_情绪_sentiment_1": [
+      "step_26_情绪_sentiment_1"
+    ],
+    "step_27_个股_开盘价": [],
+    "step_27_个股_收盘价": [],
+    "step_27_个股_最高价": [],
+    "step_27_个股_成交量": [
+      "step_27_个股_成交量"
+    ],
+    "step_27_个股_涨跌幅": [
+      "step_27_个股_涨跌幅"
+    ],
+    "step_27_个股_成交量.1": [],
+    "step_27_个股_成交额": [
+      "step_27_个股_成交额"
+    ],
+    "step_27_个股_换手率": [
+      "step_27_个股_换手率"
+    ],
+    "step_27_个股_振幅": [
+      "step_27_个股_振幅"
+    ],
+    "step_27_个股_流通市值": [],
+    "step_27_个股_RSI": [
+      "step_27_个股_RSI"
+    ],
+    "step_27_个股_MACD": [
+      "step_27_个股_MACD",
+      "step_27_个股_MACD_signal"
+    ],
+    "step_27_个股_MACD_signal": [
+      "step_27_个股_MACD_signal"
+    ],
+    "step_27_个股_BB_upper": [],
+    "step_27_个股_BB_middle": [],
+    "step_27_行业_开盘价": [],
+    "step_27_行业_收盘价": [],
+    "step_27_行业_最高价": [],
+    "step_27_行业_最低价": [],
+    "step_27_行业_成交量": [
+      "step_27_行业_成交量"
+    ],
+    "step_27_行业_涨跌幅": [
+      "step_27_行业_涨跌幅"
+    ],
+    "step_27_指数_上证指数": [
+      "step_27_指数_上证指数"
+    ],
+    "step_27_指数_沪深300": [
+      "step_27_指数_沪深300"
+    ],
+    "step_27_指数_深证成指": [],
+    "step_27_指数_创业板指": [],
+    "step_27_指数_中证500": [],
+    "step_27_情绪_sentiment_0": [
+      "step_27_情绪_sentiment_0"
+    ],
+    "step_27_情绪_sentiment_1": [
+      "step_27_情绪_sentiment_1"
+    ],
+    "step_28_个股_开盘价": [],
+    "step_28_个股_收盘价": [],
+    "step_28_个股_最高价": [],
+    "step_28_个股_成交量": [
+      "step_28_个股_成交量"
+    ],
+    "step_28_个股_涨跌幅": [
+      "step_28_个股_涨跌幅"
+    ],
+    "step_28_个股_成交量.1": [],
+    "step_28_个股_成交额": [
+      "step_28_个股_成交额"
+    ],
+    "step_28_个股_换手率": [
+      "step_28_个股_换手率"
+    ],
+    "step_28_个股_振幅": [
+      "step_28_个股_振幅"
+    ],
+    "step_28_个股_流通市值": [],
+    "step_28_个股_RSI": [
+      "step_28_个股_RSI"
+    ],
+    "step_28_个股_MACD": [
+      "step_28_个股_MACD_signal"
+    ],
+    "step_28_个股_MACD_signal": [
+      "step_28_个股_MACD_signal"
+    ],
+    "step_28_个股_BB_upper": [],
+    "step_28_个股_BB_middle": [],
+    "step_28_行业_开盘价": [
+      "step_28_行业_开盘价"
+    ],
+    "step_28_行业_收盘价": [],
+    "step_28_行业_最高价": [],
+    "step_28_行业_最低价": [],
+    "step_28_行业_成交量": [
+      "step_28_行业_成交量"
+    ],
+    "step_28_行业_涨跌幅": [
+      "step_28_行业_涨跌幅"
+    ],
+    "step_28_指数_上证指数": [
+      "step_28_指数_上证指数"
+    ],
+    "step_28_指数_沪深300": [
+      "step_28_指数_沪深300"
+    ],
+    "step_28_指数_深证成指": [],
+    "step_28_指数_创业板指": [],
+    "step_28_指数_中证500": [
+      "step_28_指数_中证500"
+    ],
+    "step_28_情绪_sentiment_0": [
+      "step_28_情绪_sentiment_0"
+    ],
+    "step_28_情绪_sentiment_1": [
+      "step_28_情绪_sentiment_1"
+    ],
+    "step_29_个股_开盘价": [],
+    "step_29_个股_收盘价": [],
+    "step_29_个股_最高价": [
+      "step_29_个股_最高价"
+    ],
+    "step_29_个股_成交量": [
+      "step_29_个股_成交量"
+    ],
+    "step_29_个股_涨跌幅": [
+      "step_29_个股_涨跌幅"
+    ],
+    "step_29_个股_成交量.1": [],
+    "step_29_个股_成交额": [
+      "step_29_个股_成交额"
+    ],
+    "step_29_个股_换手率": [
+      "step_29_个股_换手率"
+    ],
+    "step_29_个股_振幅": [
+      "step_29_个股_振幅"
+    ],
+    "step_29_个股_流通市值": [],
+    "step_29_个股_RSI": [
+      "step_29_个股_RSI"
+    ],
+    "step_29_个股_MACD": [
+      "step_29_个股_MACD",
+      "step_29_个股_MACD_signal"
+    ],
+    "step_29_个股_MACD_signal": [
+      "step_29_个股_MACD_signal"
+    ],
+    "step_29_个股_BB_upper": [],
+    "step_29_个股_BB_middle": [],
+    "step_29_行业_开盘价": [],
+    "step_29_行业_收盘价": [
+      "step_29_行业_收盘价"
+    ],
+    "step_29_行业_最高价": [],
+    "step_29_行业_最低价": [],
+    "step_29_行业_成交量": [
+      "step_29_行业_成交量"
+    ],
+    "step_29_行业_涨跌幅": [
+      "step_29_行业_涨跌幅"
+    ],
+    "step_29_指数_上证指数": [
+      "step_29_指数_上证指数"
+    ],
+    "step_29_指数_沪深300": [],
+    "step_29_指数_深证成指": [],
+    "step_29_指数_创业板指": [],
+    "step_29_指数_中证500": [
+      "step_29_指数_中证500"
+    ],
+    "step_29_情绪_sentiment_0": [
+      "step_29_情绪_sentiment_0"
+    ],
+    "step_29_情绪_sentiment_1": [
+      "step_29_情绪_sentiment_1"
+    ]
+  }
+}

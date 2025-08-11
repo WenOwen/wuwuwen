@@ -1,0 +1,95 @@
+# 股票数据处理配置文件 - 非时序版
+# 专注当日特征：不使用时序窗口，只提取当天数据，列名包含日期
+
+# ===========================================
+# 处理参数
+# ===========================================
+processing:
+  limit_stocks: null                 # 股票数量限制，null=全部
+  date_range:
+    start_date: "2025-07-01"          # 开始日期，null=最早
+    end_date: "2025-08-07"            # 结束日期，null=最新
+  
+  # 非时序特定配置
+  include_date_in_columns: false      # 是否在列名中包含日期
+  date_format: "%Y%m%d"              # 日期格式 (例如: 20250801)
+  target_prediction_days: 1          # 预测天数（预测第N天后的涨跌幅）
+  
+  # 输出组织配置
+  group_by_date: true                # 按日期分组输出
+  month_folder_format: "%y%m"        # 月份文件夹格式 (例如: 2508表示2025年8月)
+  daily_file_format: "%Y%m%d"        # 每日文件名格式 (例如: 20250801)
+
+# ===========================================
+# 特征配置
+# ===========================================
+features:
+  # 个股特征
+  stock:
+    enabled: true
+    target_dimensions: 15
+    basic_features:
+      - "开盘价"
+      - "收盘价"
+      - "最高价"
+      - "成交量"
+      - "涨跌幅"
+      - "成交额"
+      - "换手率"
+      - "振幅"
+      - "流通市值"
+
+    technical_indicators:
+      enabled: true
+      indicators:
+        - name: "RSI"
+        - name: "MACD"
+        - name: "布林带"
+        - name: "ATR"
+        - name: "ROC"
+
+  # 行业特征
+  sector:
+    enabled: true
+    target_dimensions: 6
+    features:
+      - "开盘价"
+      - "收盘价"
+      - "最高价"
+      - "最低价"
+      - "成交量"
+      - "涨跌幅"
+
+  # 指数特征
+  index:
+    enabled: true
+    target_dimensions: 5
+    index_mapping:
+      "zs000001.csv": "上证指数"
+      "zs000300.csv": "沪深300"
+      "zs399001.csv": "深证成指"
+      "zs399006.csv": "创业板指"
+      "zs000905.csv": "中证500"
+
+  # 情绪特征
+  sentiment:
+    enabled: true
+    target_dimensions: 2
+
+# ===========================================
+# 数据路径
+# ===========================================
+paths:
+  data_base_path: "./data"
+  stock_path: "datas_em"
+  industry_path: "datas_sector_historical/行业板块_全部历史"
+  index_path: "datas_index/datas_index"
+  concept_path: "datas_sector_historical/概念板块_全部历史"
+
+# ===========================================
+# 输出配置
+# ===========================================
+output:
+  save_base_dir: "./data/datas_final"    # 最终输出目录
+  only_save_full_data: true              # 只保存full_data.csv文件
+  custom_folder_name: null               # null=自动按年月分组

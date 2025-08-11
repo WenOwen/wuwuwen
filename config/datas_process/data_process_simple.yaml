@@ -5,11 +5,11 @@
 # 处理参数
 # ===========================================
 processing:
-  limit_stocks: null                   # 股票数量限制，null=全部
-  window_size: 60                     # 时序窗口大小
+  limit_stocks: null                 # 股票数量限制，null=全部
+  window_size: 1                    # 时序窗口大小
   date_range:
-    start_date: "2025-01-01"          # 开始日期，null=最早
-    end_date: "2025-07-31"            # 结束日期，null=最新
+    start_date: "2025-08-01"          # 开始日期，null=最早
+    end_date: "2025-08-07"            # 结束日期，null=最新
 
 # ===========================================
 # 特征配置
@@ -18,7 +18,7 @@ features:
   # 个股特征
   stock:
     enabled: true
-    target_dimensions: 10
+    target_dimensions: 15
     basic_features:
       - "开盘价"
       - "收盘价"
@@ -32,7 +32,7 @@ features:
       - "流通市值"
 
     technical_indicators:
-      enabled: false
+      enabled: true
       indicators:
         - name: "RSI"
         - name: "MACD"
@@ -82,5 +82,5 @@ paths:
 # 输出配置
 # ===========================================
 output:
-  save_base_dir: "./data/datas_processed"
+  save_base_dir: "./data/datas_predict"  # datas_predict  datas_processed
   custom_folder_name: null   # null=自动时间戳命名

@@ -1,0 +1,163 @@
+# LightGBM 涨跌方向预测配置文件
+# 预测任务：看多（上涨）vs 看空（下跌）
+# 二分类任务：涨幅>0为看多(1)，涨幅<=0为看空(0)
+
+# ===========================================
+# 数据配置
+# ===========================================
+data:
+  # 数据路径配置 - 直接指向professional_parquet
+  data_dir: "./data/professional_parquet"
+  
+  # 直接训练选项
+  direct_training:
+    enabled: true                    # 启用直接训练模式
+    data_format: "parquet"          # 数据格式
+    stock_name_column: "name"       # 股票名称列
+    target_column: "涨跌幅"          # 用于创建方向预测目标
+    prediction_mode: "direction"    # 🎯 预测模式：direction(方向) 或 regression(回归)
+    exclude_columns:                # 排除的列（非特征列）
+      - "name"                      # 股票名称（文本）
+      - "symbol"                    # 股票代码（标识符）
+      # 注意：涨跌幅作为特征用于预测次日涨跌方向
+    
+  # 数据加载选项
+  loading_options:
+    encoding: "utf-8"
+    validate_data: true
+    
+  # 数据预处理（简化版）
+  preprocessing:
+    # 数据标准化（推荐保留）
+    normalization:
+      method: "robust"  # robust标准化对异常值更鲁棒
+      
+    # 异常值处理（推荐保留）
+    outlier_handling:
+      enabled: true
+      method: "winsorize"
+      winsorize_limits: [0.01, 0.01]  # 1%和99%分位数截断
+
+# ===========================================
+# 训练配置
+# ===========================================
+training:
+  # 数据分割
+  data_split:
+    test_size: 0.2
+    validation_size: 0.1
+    random_state: 42
+    stratify: true                  # 🎯 分类任务使用分层抽样
+    # 🎯 次日预测必须使用时间序列分割，避免未来信息泄露
+    time_series_split: true
+    
+  # 训练参数
+  training_params:
+    early_stopping_rounds: 100
+    verbose: 10
+    eval_metric: ["precision", "binary_logloss", "auc"]  # 🎯 二分类评估指标
+
+# ===========================================
+# LightGBM 模型参数（二分类）
+# ===========================================
+lightgbm:
+  # 基础参数
+  basic_params:
+    objective: "binary"             # 🎯 二分类任务
+    metric: "auc"                   # 🎯 AUC指标
+    boosting_type: "gbdt"
+    num_leaves: 63
+    learning_rate: 0.05
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    verbose: -1
+    random_state: 42
+    
+  # 进阶参数
+  advanced_params:
+    max_depth: 6
+    min_data_in_leaf: 50
+    min_gain_to_split: 0.1
+    lambda_l1: 0
+    lambda_l2: 1
+    min_data_in_bin: 3
+    bin_construct_sample_cnt: 200000
+    
+  # 训练参数
+  fit_params:
+    num_boost_round: 1000
+
+# ===========================================
+# 特征选择
+# ===========================================
+feature_selection:
+  enabled: true
+  methods:
+    # 基于重要性的选择
+    importance_based:
+      enabled: true
+      threshold: 0.001  # 重要性阈值
+      
+    # 基于相关性的选择
+    correlation_based:
+      enabled: true
+      threshold: 0.95   # 相关性阈值
+
+# ===========================================
+# 超参数优化（可选）
+# ===========================================
+hyperparameter_tuning:
+  enabled: false  # 先关闭，加快训练速度
+
+# ===========================================
+# 输出配置
+# ===========================================
+output:
+  file_naming:
+    identifier_type: "unique_id"
+    unique_id_digits: 3
+    folder_name_prefix: "direction_training"
+    show_id_in_log: true
+  
+  model_save:
+    save_dir: "./models/lightgbm_direction"
+    model_name: "lightgbm_direction_model"
+    save_format: ["pkl"]
+    
+  results_save:
+    save_dir: "./results/lightgbm_direction"
+    save_predictions: true
+    save_feature_importance: true
+    save_metrics: true
+    save_visualizations: true      # 🎨 启用可视化图表
+    
+  logging:
+    log_level: "INFO"
+    log_file: "./logs/lightgbm_direction_training.log"
+    console_output: true
+
+# ===========================================
+# 评估配置（二分类）
+# ===========================================
+evaluation:
+  # 分类阈值设定
+  classification_threshold: 0.5     # 二分类阈值，默认0.5
+  
+  metrics:
+    - "auc"                    # AUC-ROC
+    - "accuracy"               # 准确率
+    - "precision"              # 精确率
+    - "recall"                 # 召回率
+    - "f1_score"               # F1分数
+    - "log_loss"               # 对数损失
+
+# ===========================================
+# 其他配置
+# ===========================================
+misc:
+  n_jobs: -1
+  memory_optimization:
+    enabled: true
+    chunk_size: 10000
+  random_seed: 42

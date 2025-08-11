@@ -1,0 +1,67 @@
+data:
+  data_dir: data/demo_processed/processed_20250811_123257
+  loading_options:
+    encoding: utf-8
+    prefer_full_data: true
+    validate_data: true
+  preprocessing:
+    normalization:
+      method: robust
+    outlier_handling:
+      enabled: true
+      method: winsorize
+      winsorize_limits:
+      - 0.01
+      - 0.01
+  source_data:
+    auto_process: false
+    parquet_dir: data/demo_professional_parquet
+evaluation:
+  metrics:
+  - rmse
+  - mae
+  - r2_score
+feature_selection:
+  enabled: false
+hyperparameter_tuning:
+  enabled: false
+lightgbm:
+  basic_params:
+    bagging_fraction: 0.8
+    boosting_type: gbdt
+    feature_fraction: 0.9
+    learning_rate: 0.1
+    metric: rmse
+    num_leaves: 31
+    objective: regression
+    random_state: 42
+    verbose: -1
+  fit_params:
+    num_boost_round: 100
+misc:
+  n_jobs: 1
+  random_seed: 42
+output:
+  file_naming:
+    folder_name_prefix: demo_training
+    identifier_type: unique_id
+    show_id_in_log: true
+  logging:
+    console_output: true
+    log_level: INFO
+  model_save:
+    model_name: demo_stock_model
+    save_dir: ./models/demo_lightgbm
+    save_format:
+    - pkl
+  results_save:
+    save_dir: ./results/demo_lightgbm
+    save_feature_importance: true
+    save_metrics: true
+    save_predictions: true
+training:
+  data_split:
+    random_state: 42
+    test_size: 0.2
+    time_series_split: true
+    validation_size: 0.1

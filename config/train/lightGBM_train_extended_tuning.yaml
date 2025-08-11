@@ -1,0 +1,276 @@
+# LightGBM 扩展超参数优化配置
+# 基于已获得的最佳参数结果，进行更深入的参数空间搜索
+#
+# 基准最佳结果 (training_fine_tuned_002):
+# - 交叉验证RMSE: 1.7626
+# - 测试集RMSE: 1.7699, MAE: 1.2496, R²: 0.2888
+# - 最佳参数: num_leaves=127, learning_rate=0.111953, etc.
+#
+# 扩展策略:
+# 1. 增加试验轮次到100次
+# 2. 扩大参数搜索范围
+# 3. 增加更多调优参数
+# 4. 使用更精细的参数步长
+
+# ===========================================
+# 数据配置 (保持最佳设置不变)
+# ===========================================
+data:
+  data_dir: "./data/datas_processed/processed_20250810_015407"
+  
+  X_features_file: "X_features.csv"
+  y_targets_file: "y_targets.csv"
+  full_data_file: "full_data.csv"
+  stock_codes_file: "stock_codes.json"
+  data_info_file: "data_info.json"
+  
+  loading_options:
+    prefer_full_data: true
+    encoding: "utf-8"
+    validate_data: true
+    
+  timeseries_window:
+    validate_completeness: true
+    min_samples_per_stock: 8
+    show_window_analysis: true
+  
+  preprocessing:
+    timeseries_method: "flatten"
+    
+    feature_engineering:
+      statistical_features:
+        - "mean"
+        - "std"
+        - "max"
+        - "min"
+        - "median"
+        - "skew"
+        
+      technical_features:
+        enabled: true
+        features:
+          - "momentum"
+          - "volatility"
+          - "trend"
+    
+    normalization:
+      method: "standard"
+      
+    outlier_handling:
+      enabled: true
+      method: "iqr"
+      threshold: 2.5
+
+# ===========================================
+# 训练配置
+# ===========================================
+training:
+  data_split:
+    test_size: 0.2
+    validation_size: 0.1
+    random_state: 42
+    stratify: false
+    
+  cross_validation:
+    enabled: true
+    cv_folds: 5
+    cv_strategy: "time_series"
+    
+  training_params:
+    early_stopping_rounds: 100
+    verbose: 100
+    eval_metric: ["rmse", "mae"]
+
+# ===========================================
+# LightGBM 参数 - 基于最佳结果的微调
+# ===========================================
+lightgbm:
+  # 基础参数 - 围绕最佳值
+  basic_params:
+    objective: "regression"
+    metric: "rmse"
+    boosting_type: "gbdt"
+    num_leaves: 127        # 基于最佳值127
+    learning_rate: 0.11    # 基于最佳值0.111953
+    feature_fraction: 0.9  # 基于最佳值0.898893
+    bagging_fraction: 0.7  # 基于最佳值0.700844
+    bagging_freq: 5
+    verbose: -1
+    random_state: 42
+    
+  # 进阶参数 - 基于最佳值
+  advanced_params:
+    max_depth: 6
+    min_data_in_leaf: 96   # 基于最佳值96
+    min_gain_to_split: 0.05
+    lambda_l1: 1.5         # 基于最佳值1.524528
+    lambda_l2: 0.5         # 基于最佳值0.475306
+    min_data_in_bin: 3
+    bin_construct_sample_cnt: 200000
+    
+  fit_params:
+    num_boost_round: 1000
+    categorical_feature: "auto"
+
+# ===========================================
+# 特征选择 (保持最佳设置)
+# ===========================================
+feature_selection:
+  enabled: true
+  methods:
+    importance_based:
+      enabled: true
+      threshold: 0.005
+      method: "gain"
+      
+    correlation_based:
+      enabled: true
+      threshold: 0.95
+      
+    rfe:
+      enabled: false
+
+# ===========================================
+# 扩展超参数优化 - 核心部分
+# ===========================================
+hyperparameter_tuning:
+  enabled: true
+  method: "optuna"
+  
+  optuna_config:
+    n_trials: 100          # 增加到100次试验
+    timeout: 7200          # 2小时超时
+    
+    # 扩展的参数搜索空间 - 基于已知最佳值
+    param_ranges:
+      # 叶子数量 - 围绕最佳值127扩展
+      num_leaves: [100, 200]
+      
+      # 学习率 - 围绕最佳值0.111953精细调整
+      learning_rate: [0.08, 0.15]
+      
+      # 特征采样 - 围绕最佳值0.898893
+      feature_fraction: [0.8, 1.0]
+      
+      # 样本采样 - 围绕最佳值0.700844
+      bagging_fraction: [0.6, 0.8]
+      
+      # 叶子最小样本数 - 围绕最佳值96
+      min_data_in_leaf: [70, 120]
+      
+      # L1正则化 - 围绕最佳值1.524528
+      lambda_l1: [1.0, 2.5]
+      
+      # L2正则化 - 围绕最佳值0.475306
+      lambda_l2: [0.1, 1.0]
+      
+      # 新增参数优化
+      max_depth: [5, 10]                    # 树深度
+      min_gain_to_split: [0.0, 0.1]         # 分裂增益
+      bagging_freq: [3, 7]                  # Bagging频率
+      max_bin: [200, 300]                   # 最大分箱数
+      subsample_for_bin: [150000, 300000]   # 分箱采样数
+
+# ===========================================
+# 输出配置
+# ===========================================
+output:
+  file_naming:
+    identifier_type: "unique_id"
+    unique_id_digits: 3
+    folder_name_prefix: "training_extended"  # 区分扩展版本
+    show_id_in_log: true
+  
+  model_save:
+    save_dir: "./models/lightgbm_extended"
+    model_name: "lightgbm_stock_model_extended"
+    save_format: ["pkl", "txt"]
+    
+  results_save:
+    save_dir: "./results/lightgbm_extended"
+    save_predictions: true
+    save_feature_importance: true
+    save_metrics: true
+    save_plots: true
+    # 新增优化历史保存
+    save_optimization_history: true
+    save_best_params: true
+    
+  logging:
+    log_level: "INFO"
+    log_file: "./logs/lightgbm_training_extended.log"
+    console_output: true
+
+# ===========================================
+# 评估配置
+# ===========================================
+evaluation:
+  metrics:
+    - "rmse"
+    - "mae"
+    - "mape"
+    - "r2_score"
+    - "explained_variance"
+    - "median_absolute_error"  # 新增评估指标
+    
+  visualization:
+    enabled: true
+    plots:
+      - "feature_importance"
+      - "prediction_vs_actual"
+      - "residuals"
+      - "learning_curve"
+      - "optimization_history"  # 新增优化历史图
+
+# ===========================================
+# 其他配置
+# ===========================================
+misc:
+  n_jobs: -1
+  
+  memory_optimization:
+    enabled: true
+    chunk_size: 10000
+    
+  random_seed: 42
+  
+  gpu_config:
+    enabled: false
+    device_type: "cuda"
+
+# ===========================================
+# 渐进式特征选择 (保持最佳设置)
+# ===========================================
+progressive_feature_selection:
+  enabled: true
+  stages:
+    - name: "remove_low_variance"
+      method: "variance_threshold"
+      threshold: 0.01
+    - name: "remove_highly_correlated"
+      method: "correlation"
+      threshold: 0.95
+    - name: "select_important_features"
+      method: "importance"
+      threshold: 0.005
+
+# ===========================================
+# 新增：多目标优化
+# ===========================================
+multi_objective_optimization:
+  enabled: false  # 暂时禁用，可后续启用
+  objectives:
+    - "rmse"
+    - "mae"
+    - "r2_score"
+  weights: [0.5, 0.3, 0.2]
+
+# ===========================================
+# 新增：自适应早停
+# ===========================================
+adaptive_early_stopping:
+  enabled: true
+  # 根据验证集表现动态调整早停轮数
+  min_rounds: 50
+  max_rounds: 200
+  patience_factor: 1.5

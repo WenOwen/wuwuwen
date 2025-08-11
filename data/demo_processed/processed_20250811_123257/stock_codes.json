@@ -1,0 +1,12 @@
+{
+  "stock_codes": [
+    "000001",
+    "000002",
+    "000858",
+    "600036",
+    "600519"
+  ],
+  "total_stocks": 5,
+  "total_samples": 1275,
+  "feature_count": 153
+}

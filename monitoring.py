@@ -17,8 +17,10 @@ import os
 from datetime import datetime
 
 warnings.filterwarnings('ignore')
-plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
-plt.rcParams['axes.unicode_minus'] = False    # 用来正常显示负号
+
+# 导入字体配置模块
+from font_config import setup_chinese_plot
+setup_chinese_plot()  # 设置中文字体
 
 
 class AttentionVisualizer:

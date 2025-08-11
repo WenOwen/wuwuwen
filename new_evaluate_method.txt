@@ -1,0 +1,107 @@
+    def evaluate_model(self) -> Dict:
+        """评估模型"""
+        try:
+            self.logger.info("📊 评估模型性能...")
+            
+            # 获取预测结果
+            if hasattr(self, 'prediction_mode') and self.prediction_mode == 'direction':
+                # 二分类：获取概率预测
+                y_train_pred_proba = self.model.predict(self.X_train)
+                y_val_pred_proba = self.model.predict(self.X_val)
+                y_test_pred_proba = self.model.predict(self.X_test)
+                
+                # 转换为类别预测（概率 > 0.5 为看多）
+                y_train_pred = (y_train_pred_proba > 0.5).astype(int)
+                y_val_pred = (y_val_pred_proba > 0.5).astype(int)
+                y_test_pred = (y_test_pred_proba > 0.5).astype(int)
+            else:
+                # 回归：直接预测数值
+                y_train_pred = self.model.predict(self.X_train)
+                y_val_pred = self.model.predict(self.X_val)
+                y_test_pred = self.model.predict(self.X_test)
+                y_train_pred_proba = y_val_pred_proba = y_test_pred_proba = None
+            
+            # 计算评估指标
+            eval_config = self.config.get('evaluation', {})
+            metrics_list = eval_config.get('metrics', ['rmse', 'mae', 'r2_score'])
+            
+            results = {}
+            
+            for split, y_true, y_pred, y_pred_proba in [
+                ('train', self.y_train, y_train_pred, y_train_pred_proba),
+                ('val', self.y_val, y_val_pred, y_val_pred_proba),
+                ('test', self.y_test, y_test_pred, y_test_pred_proba)
+            ]:
+                split_metrics = {}
+                
+                for metric in metrics_list:
+                    try:
+                        if hasattr(self, 'prediction_mode') and self.prediction_mode == 'direction':
+                            # 🎯 分类指标
+                            if metric == 'accuracy':
+                                value = np.mean(y_true == y_pred) * 100
+                            elif metric == 'auc' and y_pred_proba is not None:
+                                from sklearn.metrics import roc_auc_score
+                                value = roc_auc_score(y_true, y_pred_proba)
+                            elif metric == 'precision':
+                                from sklearn.metrics import precision_score
+                                value = precision_score(y_true, y_pred, zero_division=0)
+                            elif metric == 'recall':
+                                from sklearn.metrics import recall_score
+                                value = recall_score(y_true, y_pred, zero_division=0)
+                            elif metric == 'f1_score':
+                                from sklearn.metrics import f1_score
+                                value = f1_score(y_true, y_pred, zero_division=0)
+                            elif metric == 'log_loss' and y_pred_proba is not None:
+                                from sklearn.metrics import log_loss
+                                # 处理概率边界问题
+                                y_pred_proba_clipped = np.clip(y_pred_proba, 1e-15, 1-1e-15)
+                                value = log_loss(y_true, y_pred_proba_clipped)
+                            else:
+                                continue
+                        else:
+                            # 📈 回归指标
+                            if metric == 'rmse':
+                                value = np.sqrt(mean_squared_error(y_true, y_pred))
+                            elif metric == 'mae':
+                                value = mean_absolute_error(y_true, y_pred)
+                            elif metric == 'mape':
+                                value = np.mean(np.abs((y_true - y_pred) / (y_true + 1e-8))) * 100
+                            elif metric == 'r2_score':
+                                value = r2_score(y_true, y_pred)
+                            elif metric == 'explained_variance':
+                                value = explained_variance_score(y_true, y_pred)
+                            elif metric == 'directional_accuracy':
+                                # 方向准确率（股票预测特有指标）
+                                direction_true = np.sign(y_true)
+                                direction_pred = np.sign(y_pred)
+                                value = np.mean(direction_true == direction_pred) * 100
+                            else:
+                                continue
+                        
+                        split_metrics[metric] = float(value)
+                        
+                    except Exception as e:
+                        self.logger.warning(f"   计算指标 {metric} 失败: {e}")
+                        continue
+                
+                results[split] = split_metrics
+            
+            # 输出结果
+            prediction_type = "方向预测" if hasattr(self, 'prediction_mode') and self.prediction_mode == 'direction' else "回归预测"
+            self.logger.info(f"   📈 评估结果 ({prediction_type}):")
+            for split, metrics in results.items():
+                self.logger.info(f"     {split.upper()}:")
+                for metric, value in metrics.items():
+                    if metric in ['mape', 'directional_accuracy', 'accuracy']:
+                        self.logger.info(f"       {metric}: {value:.2f}%")
+                    else:
+                        self.logger.info(f"       {metric}: {value:.6f}")
+            
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"❌ 模型评估失败: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            return {}

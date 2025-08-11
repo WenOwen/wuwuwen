@@ -1,0 +1,20 @@
+            # 检查预测模式
+            prediction_mode = direct_training.get('prediction_mode', 'regression')
+            self.prediction_mode = prediction_mode  # 保存预测模式
+            
+            # 设置目标变量
+            raw_targets = full_data['next_day_target']
+            
+            if prediction_mode == 'direction':
+                # 🎯 方向预测模式：涨跌幅 > 0 为看多(1)，<= 0 为看空(0)
+                self.y = (raw_targets > 0).astype(int)
+                actual_target_column = 'next_day_direction'
+                self.logger.info(f"   🎯 预测模式: 涨跌方向预测（二分类）")
+                self.logger.info(f"   📊 看多样本: {(self.y == 1).sum():,} ({(self.y == 1).mean()*100:.1f}%)")
+                self.logger.info(f"   📊 看空样本: {(self.y == 0).sum():,} ({(self.y == 0).mean()*100:.1f}%)")
+            else:
+                # 📈 回归预测模式：预测具体涨跌幅
+                self.y = raw_targets
+                actual_target_column = 'next_day_target'
+                self.logger.info(f"   📈 预测模式: 涨跌幅预测（回归）")
+                self.logger.info(f"   📊 目标值范围: [{self.y.min():.4f}, {self.y.max():.4f}]")

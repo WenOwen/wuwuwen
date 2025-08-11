@@ -20,6 +20,10 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+# 导入字体配置模块（必须在matplotlib相关代码之前）
+from font_config import setup_chinese_plot
+setup_chinese_plot()  # 设置中文字体
+
 # 导入模型和配置
 from model import SiameseLSTMModel, ModelEvaluator
 from config import Config, ConfigPresets
