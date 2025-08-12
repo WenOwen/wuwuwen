@@ -1566,10 +1566,9 @@ class StockLightGBMTrainer:
                 try:
                     self.logger.info("   🎨 开始生成可视化图表...")
                     
-                    # 获取预测结果
+                    # 获取预测结果（只使用训练集和验证集）
                     y_train_pred = self.model.predict(self.X_train)
                     y_val_pred = self.model.predict(self.X_val)
-                    y_test_pred = self.model.predict(self.X_test)
                     
                     # 设置特征名称给可视化器
                     if hasattr(self.visualizer, '__dict__'):
